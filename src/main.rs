@@ -250,9 +250,9 @@ fn IntroPage() -> impl IntoView {
                 <h2>"Hi, I'm Michael."</h2>
                 <p class="section-copy">"I'm Michael Snoyman, a software engineer, engineering leader, open-source developer, and author. I built TryCrypto because I wanted a straightforward way to explain the cryptographic building blocks we rely on without requiring people to start with the mathematics."</p>
                 <div class="text-links">
-                    <a href="https://www.snoyman.com/">"About Michael ↗"</a>
-                    <a href="https://github.com/snoyberg">"GitHub ↗"</a>
-                    <a href="https://www.snoyman.com/blog/">"Blog & subscribe ↗"</a>
+                    <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"About Michael ↗"</a>
+                    <a href="https://github.com/snoyberg" target="_blank" rel="noopener noreferrer">"GitHub ↗"</a>
+                    <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog & subscribe ↗"</a>
                 </div>
             </div>
             <aside class="project-teaser">
@@ -260,7 +260,7 @@ fn IntroPage() -> impl IntoView {
                 <h3>"What can a signature really tell us?"</h3>
                 <p>"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder."</p>
                 <p>"I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
-                <a href="https://www.snoyman.com/blog/">"Follow along on my blog →"</a>
+                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Follow along on my blog →"</a>
             </aside>
         </section>
     }
@@ -373,7 +373,7 @@ fn SiteFooter() -> impl IntoView {
     view! {
         <footer>
             <span>"TryCrypto — an educational project by Michael Snoyman."</span>
-            <span><a href="https://github.com/veloxwarp/trycrypto">"Source on GitHub ↗"</a> " · Browser cryptography is for learning here, not production key management."</span>
+            <span><a href="https://github.com/veloxwarp/trycrypto" target="_blank" rel="noopener noreferrer">"Source on GitHub ↗"</a> " · Browser cryptography is for learning here, not production key management."</span>
         </footer>
     }
 }

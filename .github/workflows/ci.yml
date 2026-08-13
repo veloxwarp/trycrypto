@@ -9,7 +9,7 @@ on:
       - site-restructure
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check:
@@ -25,18 +25,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Format
-        run: cargo fmt --all
-
-      - name: Commit formatting
-        if: github.ref == 'refs/heads/site-restructure'
-        run: |
-          if ! git diff --quiet -- src; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src
-            git commit -m "Apply rustfmt [skip ci]"
-            git push
-          fi
+        run: cargo fmt --all -- --check
 
       - name: Check
         run: cargo check

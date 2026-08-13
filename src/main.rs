@@ -96,8 +96,8 @@ fn SiteHeader() -> impl IntoView {
             <nav aria-label="Lessons">
                 <A href="/intro" exact=true>"Intro"</A>
                 <A href="/hashes" exact=true>"01 Hashes"</A>
-                <A href="/symmetric-encryption" exact=true>"02 Encryption"</A>
-                <A href="/keypairs" exact=true>"03 Keypairs"</A>
+                <A href="/symmetric-encryption" exact=true>"02 Shared key"</A>
+                <A href="/keypairs" exact=true>"03 Public/private"</A>
                 <A href="/public-key-encryption" exact=true>"04 Public key"</A>
                 <A href="/signatures" exact=true>"05 Signatures"</A>
                 <A href="/verification" exact=true>"06 Verification"</A>
@@ -117,7 +117,7 @@ fn CompletionPage() -> impl IntoView {
         />
         <section class="content-section">
             <h2>"You've reached the end of TryCrypto."</h2>
-            <p class="section-copy">"You've gone from bytes and hashes through encryption, Curve25519 keypairs, signatures, and the harder question of what verification actually establishes."</p>
+            <p class="section-copy">"You've gone from bytes and hashes through shared-key encryption, public/private keys, public-key encryption, signatures, and the harder question of what verification actually establishes."</p>
             <div class="hero-actions">
                 <A href="/" attr:class="button primary">"Back to the course"</A>
                 <A href="/hashes" attr:class="button ghost">"Revisit hashes"</A>

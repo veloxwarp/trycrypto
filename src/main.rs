@@ -73,8 +73,9 @@ fn App() -> impl IntoView {
             <SiteHeader />
             <main>
                 <Routes fallback=|| view! { <NotFound /> }>
-                    <Route path=path!("") view=IntroPage />
-                    <Route path=path!("index.html") view=IntroPage />
+                    <Route path=path!("") view=HomePage />
+                    <Route path=path!("index.html") view=HomePage />
+                    <Route path=path!("intro") view=IntroLesson />
                     <Route path=path!("hashes") view=HashLesson />
                     <Route path=path!("symmetric-encryption") view=SymmetricEncryptionPage />
                     <Route path=path!("keypairs") view=KeypairsPage />
@@ -96,7 +97,7 @@ fn SiteHeader() -> impl IntoView {
                 <span>"Try"<i>"Crypto"</i></span>
             </A>
             <nav aria-label="Lessons">
-                <A href="/" exact=true>"Intro"</A>
+                <A href="/intro" exact=true>"Intro"</A>
                 {LESSONS
                     .iter()
                     .map(|lesson| {
@@ -113,7 +114,7 @@ fn SiteHeader() -> impl IntoView {
 }
 
 #[component]
-fn IntroPage() -> impl IntoView {
+fn HomePage() -> impl IntoView {
     view! {
         <section class="home-hero">
             <div>
@@ -126,8 +127,8 @@ fn IntroPage() -> impl IntoView {
                     "The mathematics behind modern cryptography can be sophisticated. But you don't need to be a cryptographer to understand the tools it gives us."
                 </p>
                 <div class="hero-actions">
-                    <A href="/hashes" attr:class="button primary">"Start with hashes →"</A>
-                    <a class="button ghost" href="#primer">"First: bytes & hex"</a>
+                    <A href="/intro" attr:class="button primary">"Start with the intro →"</A>
+                    <a class="button ghost" href="#lessons">"See the lessons"</a>
                 </div>
             </div>
             <aside class="definition-card">
@@ -150,12 +151,10 @@ fn IntroPage() -> impl IntoView {
             </div>
         </section>
 
-        <BytePrimer />
-
         <section id="lessons" class="content-section lessons-section">
             <p class="eyebrow">"THE COURSE"</p>
             <h2>"Six problems. Six cryptographic tools."</h2>
-            <p class="section-copy">"Each lesson begins with a problem worth solving, gives you a workbench to solve it, and then asks you to use that workbench to prove that you understood the result."</p>
+            <p class="section-copy">"Start with a short intro to bytes and hexadecimal, then each cryptography lesson begins with a problem worth solving, gives you a workbench to solve it, and asks you to use that workbench to prove that you understood the result."</p>
             <div class="lesson-grid">
                 {LESSONS
                     .iter()
@@ -204,34 +203,44 @@ fn IntroPage() -> impl IntoView {
 }
 
 #[component]
-fn BytePrimer() -> impl IntoView {
+fn IntroLesson() -> impl IntoView {
     let (byte_value, set_byte_value) = signal(173_u16);
     let (hex_answer, set_hex_answer) = signal(String::new());
     let (hex_result, set_hex_result) = signal(Option::<bool>::None);
 
     view! {
-        <section id="primer" class="content-section primer-section">
+        <LessonIntro
+            number="INTRO"
+            eyebrow="A FEW BASICS BEFORE WE START"
+            title="Bytes & hexadecimal"
+            summary="Cryptographic tools work with bytes, and those bytes are often displayed in hexadecimal. You only need a little of both to follow the rest of TryCrypto."
+        />
+
+        <section class="content-section primer-section">
             <div class="section-heading">
-                <p class="eyebrow">"TWO SMALL BASICS"</p>
-                <h2>"Bytes and hexadecimal."</h2>
-                <p class="section-copy">"Cryptographic tools work with bytes. A byte is simply a number from 0 through 255. You'll also see those byte values written in hexadecimal—usually shortened to hex."</p>
+                <p class="eyebrow">"BYTES"</p>
+                <h2>"A byte is a number from 0 through 255."</h2>
+                <p class="section-copy">"That's 256 possible values. Cryptographic keys, hashes, ciphertext, and other data are ultimately made up of bytes, so you'll see these values throughout the lessons."</p>
             </div>
 
             <div class="primer-grid">
                 <div>
-                    <h3>"Why hex?"</h3>
-                    <p>"Decimal uses ten digits: 0 through 9. Hex uses sixteen digits: the numbers 0 through 9, then the letters A through F. The letters are sometimes uppercase and sometimes lowercase; A and a mean the same value."</p>
-                    <p>"Because there are 16 possible hex digits, two hex digits can represent 16 × 16 = 256 values—exactly the 256 values in one byte. So one byte always fits neatly in two hex digits, from 00 through FF."</p>
+                    <p class="eyebrow">"HEXADECIMAL"</p>
+                    <h3>"A compact way to write byte values."</h3>
+                    <p>"The normal number system we use is decimal, or base 10. That means we have 10 possible digits: the numbers 0 through 9. Hexadecimal is base 16, so it needs six additional values. Beyond 0 through 9, it also includes A through F. A means 10, B means 11, and so on through F, which means 15. The letters may be uppercase or lowercase; A and a mean the same value."</p>
+                    <p>"The place values change with the base. In decimal, the number 54 has 5 in the tens position and 4 in the ones position, so its value is 5 × 10 + 4. In a two-digit hex number, the left digit is in the sixteens position and the right digit is in the ones position. So A5 means 10 × 16 + 5, which is 165 in decimal."</p>
+                    <p>"Because two hex digits can represent 16 × 16 = 256 different values, one byte always fits neatly into exactly two hex digits, from 00 through FF."</p>
                     <table class="hex-table">
-                        <thead><tr><th>"Decimal"</th><th>"Hex"</th><th>"Why"</th></tr></thead>
+                        <thead><tr><th>"Decimal"</th><th>"Hex"</th></tr></thead>
                         <tbody>
-                            <tr><td>"0"</td><td><code>"00"</code></td><td>"0 × 16 + 0"</td></tr>
-                            <tr><td>"9"</td><td><code>"09"</code></td><td>"0 × 16 + 9"</td></tr>
-                            <tr><td>"10"</td><td><code>"0A"</code></td><td>"A means 10"</td></tr>
-                            <tr><td>"15"</td><td><code>"0F"</code></td><td>"F means 15"</td></tr>
-                            <tr><td>"16"</td><td><code>"10"</code></td><td>"1 × 16 + 0"</td></tr>
-                            <tr><td>"31"</td><td><code>"1F"</code></td><td>"1 × 16 + 15"</td></tr>
-                            <tr><td>"255"</td><td><code>"FF"</code></td><td>"15 × 16 + 15"</td></tr>
+                            <tr><td>"0"</td><td><code>"00"</code></td></tr>
+                            <tr><td>"9"</td><td><code>"09"</code></td></tr>
+                            <tr><td>"10"</td><td><code>"0A"</code></td></tr>
+                            <tr><td>"15"</td><td><code>"0F"</code></td></tr>
+                            <tr><td>"16"</td><td><code>"10"</code></td></tr>
+                            <tr><td>"31"</td><td><code>"1F"</code></td></tr>
+                            <tr><td>"165"</td><td><code>"A5"</code></td></tr>
+                            <tr><td>"255"</td><td><code>"FF"</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -255,7 +264,7 @@ fn BytePrimer() -> impl IntoView {
                         <span>"HEX"</span>
                         <code>{move || format!("{:02X}", byte_value.get())}</code>
                     </div>
-                    <p class="microcopy">"Try 10, 15, 16, 31, 173, and 255 and watch the two hex digits change."</p>
+                    <p class="microcopy">"Try 10, 15, 16, 31, 165, 173, and 255 and watch the two hex digits change."</p>
 
                     <div class="tool-quiz">
                         <p class="eyebrow">"QUICK CHECK"</p>
@@ -263,7 +272,7 @@ fn BytePrimer() -> impl IntoView {
                         <div class="quiz-answer-row">
                             <input
                                 aria-label="Hex value for decimal 200"
-                                placeholder="e.g. C8"
+                                placeholder="Your answer"
                                 prop:value=move || hex_answer.get()
                                 on:input=move |ev| {
                                     set_hex_answer.set(event_target_value(&ev));
@@ -287,6 +296,10 @@ fn BytePrimer() -> impl IntoView {
                     </div>
                 </aside>
             </div>
+
+            <A href="/hashes" attr:class="next-lesson">
+                <span>"NEXT"</span><b>"01 — Hashes →"</b>
+            </A>
         </section>
     }
 }
@@ -556,7 +569,7 @@ fn NotFound() -> impl IntoView {
             <p class="eyebrow">"404"</p>
             <h1>"That lesson isn't here."</h1>
             <p class="lede">"The cryptography may be complicated. The navigation shouldn't be."</p>
-            <A href="/" exact=true attr:class="button primary">"Back to the intro"</A>
+            <A href="/" exact=true attr:class="button primary">"Back home"</A>
         </section>
     }
 }

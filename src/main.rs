@@ -44,26 +44,14 @@ fn HashLesson() -> impl IntoView {
     let (digest, set_digest) = signal(String::from("Calculating…"));
     let (error, set_error) = signal(Option::<String>::None);
 
-    let update_digest = move |text: String| {
-        set_input.set(text.clone());
+    Effect::new(move |_| {
+        let text = input.get();
         spawn_local(async move {
             match crypto::sha256_hex(&text).await {
                 Ok(value) => {
                     set_error.set(None);
                     set_digest.set(value);
                 }
-                Err(err) => {
-                    set_error.set(Some(format!("{err:?}")));
-                }
-            }
-        });
-    };
-
-    Effect::new(move |_| {
-        let text = input.get();
-        spawn_local(async move {
-            match crypto::sha256_hex(&text).await {
-                Ok(value) => set_digest.set(value),
                 Err(err) => set_error.set(Some(format!("{err:?}"))),
             }
         });
@@ -83,7 +71,7 @@ fn HashLesson() -> impl IntoView {
             <textarea
                 id="hash-input"
                 prop:value=move || input.get()
-                on:input=move |ev| update_digest(event_target_value(&ev))
+                on:input=move |ev| set_input.set(event_target_value(&ev))
             />
 
             <div class="output" aria-live="polite">

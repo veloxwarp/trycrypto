@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use crate::LessonIntro;
+use leptos::prelude::*;
 
 #[component]
 pub fn IntroLesson() -> impl IntoView {

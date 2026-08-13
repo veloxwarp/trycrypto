@@ -139,22 +139,10 @@ fn HomePage() -> impl IntoView {
             </aside>
         </section>
 
-        <section class="everywhere-section content-section">
-            <div class="section-heading">
-                <p class="eyebrow">"ALREADY IN YOUR LIFE"</p>
-                <h2>"You use cryptography every day."</h2>
-            </div>
-            <div class="principles">
-                <article><span>"01"</span><h3>"Secure connections"</h3><p>"HTTPS uses cryptography to protect the connection between your browser and a website."</p></article>
-                <article><span>"02"</span><h3>"Protected devices"</h3><p>"Phones and computers use cryptography to protect stored data and credentials."</p></article>
-                <article><span>"03"</span><h3>"Verifiable software"</h3><p>"Hashes and signatures help establish that software and data are the exact bytes you expected."</p></article>
-            </div>
-        </section>
-
         <section id="lessons" class="content-section lessons-section">
             <p class="eyebrow">"THE COURSE"</p>
-            <h2>"Six problems. Six cryptographic tools."</h2>
-            <p class="section-copy">"Start with a short intro to bytes and hexadecimal, then each cryptography lesson begins with a problem worth solving, gives you a workbench to solve it, and asks you to use that workbench to prove that you understood the result."</p>
+            <h2>"Start with a problem. Discover the cryptographic tool that solves it."</h2>
+            <p class="section-copy">"TryCrypto is organized around practical questions: How can I tell whether a file changed? How can I send something privately? How can I prove that a key approved a message? Start with a short intro to bytes and hexadecimal, then use an interactive workbench in each lesson to answer the question yourself."</p>
             <div class="lesson-grid">
                 {LESSONS
                     .iter()

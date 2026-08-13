@@ -3,37 +3,14 @@ mod crypto;
 use std::{cell::Cell, rc::Rc};
 
 use leptos::prelude::*;
+use leptos_router::{
+    components::{A, Route, Router, Routes},
+    path,
+};
 use wasm_bindgen_futures::spawn_local;
 
 fn main() {
     mount_to_body(App);
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Page {
-    Intro,
-    Hashes,
-    SymmetricEncryption,
-    Keypairs,
-    PublicKeyEncryption,
-    Signatures,
-    Verification,
-    NotFound,
-}
-
-impl Page {
-    fn from_path(path: &str) -> Self {
-        match path.trim_end_matches('/') {
-            "" => Self::Intro,
-            "/hashes" => Self::Hashes,
-            "/symmetric-encryption" => Self::SymmetricEncryption,
-            "/keypairs" => Self::Keypairs,
-            "/public-key-encryption" => Self::PublicKeyEncryption,
-            "/signatures" => Self::Signatures,
-            "/verification" => Self::Verification,
-            _ => Self::NotFound,
-        }
-    }
 }
 
 struct Lesson {
@@ -91,92 +68,45 @@ const LESSONS: [Lesson; 6] = [
 
 #[component]
 fn App() -> impl IntoView {
-    let path = web_sys::window()
-        .and_then(|window| window.location().pathname().ok())
-        .unwrap_or_else(|| "/".to_owned());
-    let page = Page::from_path(&path);
-
     view! {
-        <SiteHeader current=page />
-        <main>
-            {match page {
-                Page::Intro => view! { <IntroPage /> }.into_any(),
-                Page::Hashes => view! { <HashLesson /> }.into_any(),
-                Page::SymmetricEncryption => view! {
-                    <ComingLesson
-                        number="02"
-                        title="Shared-secret encryption"
-                        eyebrow="ONE SECRET, TWO DIRECTIONS"
-                        summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
-                        points=&["Encrypt and decrypt with AES-GCM", "See the role of a nonce", "Learn why authenticated encryption matters"]
-                    />
-                }.into_any(),
-                Page::Keypairs => view! {
-                    <ComingLesson
-                        number="03"
-                        title="Public/private keypairs"
-                        eyebrow="TWO KEYS, DIFFERENT JOBS"
-                        summary="Public-key cryptography separates what you can safely share from the secret material that proves control."
-                        points=&["Generate a keypair in the browser", "Compare public and private material", "Understand what possession of each key permits"]
-                    />
-                }.into_any(),
-                Page::PublicKeyEncryption => view! {
-                    <ComingLesson
-                        number="04"
-                        title="Public-key encryption"
-                        eyebrow="ENCRYPT FOR SOMEONE ELSE"
-                        summary="A public key can let other people protect data for you without giving them the secret needed to decrypt it."
-                        points=&["Encrypt using a recipient's public key", "Decrypt using the corresponding private key", "Contrast this with shared-secret encryption"]
-                    />
-                }.into_any(),
-                Page::Signatures => view! {
-                    <ComingLesson
-                        number="05"
-                        title="Digital signatures"
-                        eyebrow="PROVE CONTROL OF A KEY"
-                        summary="A signature binds a private key to exact data in a way that anyone with the public key can verify."
-                        points=&["Sign an exact message", "Verify with the public key", "Watch verification fail when the message changes"]
-                    />
-                }.into_any(),
-                Page::Verification => view! {
-                    <ComingLesson
-                        number="06"
-                        title="Verification & identity"
-                        eyebrow="WHAT DID WE ACTUALLY PROVE?"
-                        summary="Cryptography can give precise answers about keys and data. Connecting those answers to people, organizations, and truth requires additional evidence."
-                        points=&["Separate keys from identities", "Distinguish valid signatures from true statements", "Identify the trust assumptions outside the cryptography"]
-                    />
-                }.into_any(),
-                Page::NotFound => view! { <NotFound /> }.into_any(),
-            }}
-        </main>
-        <SiteFooter />
+        <Router>
+            <SiteHeader />
+            <main>
+                <Routes fallback=|| view! { <NotFound /> }>
+                    <Route path=path!("") view=IntroPage />
+                    <Route path=path!("index.html") view=IntroPage />
+                    <Route path=path!("hashes") view=HashLesson />
+                    <Route path=path!("symmetric-encryption") view=SymmetricEncryptionPage />
+                    <Route path=path!("keypairs") view=KeypairsPage />
+                    <Route path=path!("public-key-encryption") view=PublicKeyEncryptionPage />
+                    <Route path=path!("signatures") view=SignaturesPage />
+                    <Route path=path!("verification") view=VerificationPage />
+                </Routes>
+            </main>
+            <SiteFooter />
+        </Router>
     }
 }
 
 #[component]
-fn SiteHeader(current: Page) -> impl IntoView {
+fn SiteHeader() -> impl IntoView {
     view! {
         <header class="site-header">
-            <a class="brand" href="/" aria-label="TryCrypto home">
+            <A href="/" exact=true attr:class="brand" attr:aria-label="TryCrypto home">
                 <span>"Try"<i>"Crypto"</i></span>
-            </a>
+            </A>
             <nav aria-label="Lessons">
-                <a class:active=current == Page::Intro href="/">"Intro"</a>
-                {LESSONS.iter().enumerate().map(|(index, lesson)| {
-                    let active = matches!(
-                        (index, current),
-                        (0, Page::Hashes)
-                            | (1, Page::SymmetricEncryption)
-                            | (2, Page::Keypairs)
-                            | (3, Page::PublicKeyEncryption)
-                            | (4, Page::Signatures)
-                            | (5, Page::Verification)
-                    );
-                    view! {
-                        <a class:active=active href=lesson.href>{format!("{} {}", lesson.number, lesson.short)}</a>
-                    }
-                }).collect_view()}
+                <A href="/" exact=true>"Intro"</A>
+                {LESSONS
+                    .iter()
+                    .map(|lesson| {
+                        view! {
+                            <A href=lesson.href exact=true>
+                                {format!("{} {}", lesson.number, lesson.short)}
+                            </A>
+                        }
+                    })
+                    .collect_view()}
             </nav>
         </header>
     }
@@ -196,7 +126,7 @@ fn IntroPage() -> impl IntoView {
                     "The mathematics behind modern cryptography can be sophisticated. But you don't need to be a cryptographer to understand the tools it gives us."
                 </p>
                 <div class="hero-actions">
-                    <a class="button primary" href="/hashes">"Start with hashes →"</a>
+                    <A href="/hashes" attr:class="button primary">"Start with hashes →"</A>
                     <a class="button ghost" href="#lessons">"See the lessons"</a>
                 </div>
             </div>
@@ -225,14 +155,19 @@ fn IntroPage() -> impl IntoView {
             <h2>"Six small lessons. One idea at a time."</h2>
             <p class="section-copy">"Each lesson introduces a primitive from the user's point of view, lets you experiment with it, and makes its guarantees explicit."</p>
             <div class="lesson-grid">
-                {LESSONS.iter().map(|lesson| view! {
-                    <a class="lesson-card" href=lesson.href>
-                        <span>{lesson.number}</span>
-                        <h3>{lesson.title}</h3>
-                        <p>{lesson.description}</p>
-                        <b>"Open lesson →"</b>
-                    </a>
-                }).collect_view()}
+                {LESSONS
+                    .iter()
+                    .map(|lesson| {
+                        view! {
+                            <A href=lesson.href exact=true attr:class="lesson-card">
+                                <span>{lesson.number}</span>
+                                <h3>{lesson.title}</h3>
+                                <p>{lesson.description}</p>
+                                <b>"Open lesson →"</b>
+                            </A>
+                        }
+                    })
+                    .collect_view()}
             </div>
         </section>
 
@@ -298,18 +233,33 @@ fn HashLesson() -> impl IntoView {
     });
 
     view! {
-        <LessonIntro number="01" eyebrow="A FINGERPRINT FOR DATA" title="Hashes" summary="A cryptographic hash turns arbitrary data into a fixed-size value. The same input gives the same hash; change even one character and the output changes dramatically." />
+        <LessonIntro
+            number="01"
+            eyebrow="A FINGERPRINT FOR DATA"
+            title="Hashes"
+            summary="A cryptographic hash turns arbitrary data into a fixed-size value. The same input gives the same hash; change even one character and the output changes dramatically."
+        />
         <section class="workbench">
             <div class="workbench-heading">
                 <div><p class="eyebrow">"BROWSER WORKBENCH"</p><h2>"Try SHA-256 yourself."</h2></div>
                 <p>"Everything happens locally in your browser. The text you enter here is not sent to a server."</p>
             </div>
             <div class="hash-tool">
-                <label for="hash-input"><span>"INPUT"</span><textarea id="hash-input" prop:value=move || input.get() on:input=move |ev| set_input.set(event_target_value(&ev)) /></label>
+                <label for="hash-input">
+                    <span>"INPUT"</span>
+                    <textarea
+                        id="hash-input"
+                        prop:value=move || input.get()
+                        on:input=move |ev| set_input.set(event_target_value(&ev))
+                    />
+                </label>
                 <div class="arrow">"↓"</div>
                 <div class="output" aria-live="polite">
                     <span>"SHA-256"</span>
-                    <code>{move || match error.get() { Some(err) => format!("WebCrypto error: {err}"), None => digest.get() }}</code>
+                    <code>{move || match error.get() {
+                        Some(err) => format!("WebCrypto error: {err}"),
+                        None => digest.get(),
+                    }}</code>
                 </div>
             </div>
         </section>
@@ -322,8 +272,75 @@ fn HashLesson() -> impl IntoView {
                 <article><span>"NO"</span><h3>"No author identity"</h3><p>"The hash alone tells you nothing about who created, published, or endorsed the data."</p></article>
                 <article><span>"NO"</span><h3>"No claim of truth"</h3><p>"False information hashes just as reliably as true information."</p></article>
             </div>
-            <a class="next-lesson" href="/symmetric-encryption"><span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b></a>
+            <A href="/symmetric-encryption" attr:class="next-lesson">
+                <span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b>
+            </A>
         </section>
+    }
+}
+
+#[component]
+fn SymmetricEncryptionPage() -> impl IntoView {
+    view! {
+        <ComingLesson
+            number="02"
+            title="Shared-secret encryption"
+            eyebrow="ONE SECRET, TWO DIRECTIONS"
+            summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
+            points=&["Encrypt and decrypt with AES-GCM", "See the role of a nonce", "Learn why authenticated encryption matters"]
+        />
+    }
+}
+
+#[component]
+fn KeypairsPage() -> impl IntoView {
+    view! {
+        <ComingLesson
+            number="03"
+            title="Public/private keypairs"
+            eyebrow="TWO KEYS, DIFFERENT JOBS"
+            summary="Public-key cryptography separates what you can safely share from the secret material that proves control."
+            points=&["Generate a keypair in the browser", "Compare public and private material", "Understand what possession of each key permits"]
+        />
+    }
+}
+
+#[component]
+fn PublicKeyEncryptionPage() -> impl IntoView {
+    view! {
+        <ComingLesson
+            number="04"
+            title="Public-key encryption"
+            eyebrow="ENCRYPT FOR SOMEONE ELSE"
+            summary="A public key can let other people protect data for you without giving them the secret needed to decrypt it."
+            points=&["Encrypt using a recipient's public key", "Decrypt using the corresponding private key", "Contrast this with shared-secret encryption"]
+        />
+    }
+}
+
+#[component]
+fn SignaturesPage() -> impl IntoView {
+    view! {
+        <ComingLesson
+            number="05"
+            title="Digital signatures"
+            eyebrow="PROVE CONTROL OF A KEY"
+            summary="A signature binds a private key to exact data in a way that anyone with the public key can verify."
+            points=&["Sign an exact message", "Verify with the public key", "Watch verification fail when the message changes"]
+        />
+    }
+}
+
+#[component]
+fn VerificationPage() -> impl IntoView {
+    view! {
+        <ComingLesson
+            number="06"
+            title="Verification & identity"
+            eyebrow="WHAT DID WE ACTUALLY PROVE?"
+            summary="Cryptography can give precise answers about keys and data. Connecting those answers to people, organizations, and truth requires additional evidence."
+            points=&["Separate keys from identities", "Distinguish valid signatures from true statements", "Identify the trust assumptions outside the cryptography"]
+        />
     }
 }
 
@@ -353,7 +370,11 @@ fn ComingLesson(
     view! {
         <LessonIntro number eyebrow title summary />
         <section class="coming-section">
-            <div><p class="eyebrow">"LESSON IN DEVELOPMENT"</p><h2>"This workbench is coming next."</h2><p>"The route and lesson structure are in place. The interactive exercise will be added here without changing the overall course navigation."</p></div>
+            <div>
+                <p class="eyebrow">"LESSON IN DEVELOPMENT"</p>
+                <h2>"This workbench is coming next."</h2>
+                <p>"The route and lesson structure are in place. The interactive exercise will be added here without changing the overall course navigation."</p>
+            </div>
             <ol>{points.iter().map(|point| view! { <li>{*point}</li> }).collect_view()}</ol>
         </section>
     }
@@ -363,7 +384,10 @@ fn ComingLesson(
 fn NotFound() -> impl IntoView {
     view! {
         <section class="not-found">
-            <p class="eyebrow">"404"</p><h1>"That lesson isn't here."</h1><p class="lede">"The cryptography may be complicated. The navigation shouldn't be."</p><a class="button primary" href="/">"Back to the intro"</a>
+            <p class="eyebrow">"404"</p>
+            <h1>"That lesson isn't here."</h1>
+            <p class="lede">"The cryptography may be complicated. The navigation shouldn't be."</p>
+            <A href="/" exact=true attr:class="button primary">"Back to the intro"</A>
         </section>
     }
 }
@@ -373,7 +397,10 @@ fn SiteFooter() -> impl IntoView {
     view! {
         <footer>
             <span>"TryCrypto — an educational project by Michael Snoyman."</span>
-            <span><a href="https://github.com/veloxwarp/trycrypto" target="_blank" rel="noopener noreferrer">"Source on GitHub ↗"</a> " · Browser cryptography is for learning here, not production key management."</span>
+            <span>
+                <a href="https://github.com/veloxwarp/trycrypto" target="_blank" rel="noopener noreferrer">"Source on GitHub ↗"</a>
+                " · Browser cryptography is for learning here, not production key management."
+            </span>
         </footer>
     }
 }

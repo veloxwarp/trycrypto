@@ -117,42 +117,37 @@ fn SiteHeader() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     view! {
         <section class="home-hero">
-            <div>
-                <p class="eyebrow">"AN INTERACTIVE INTRODUCTION TO PRACTICAL CRYPTOGRAPHY"</p>
-                <h1>"Cryptography is everywhere." <span>"Learn what it actually does."</span></h1>
-                <p class="lede">
-                    "Every secure website you visit, every locked phone, and much of the software you rely on depends on cryptography."
-                </p>
-                <p class="lede">
-                    "The mathematics behind modern cryptography can be sophisticated. But you don't need to be a cryptographer to understand the tools it gives us."
-                </p>
-                <div class="hero-actions">
-                    <A href="/intro" attr:class="button primary">"Start with the intro →"</A>
-                    <a class="button ghost" href="#lessons">"See the lessons"</a>
-                </div>
-            </div>
-            <aside class="definition-card">
-                <p class="eyebrow">"THE GOAL"</p>
-                <h2>"Use the primitives. Understand the guarantees."</h2>
-                <p>"Generate hashes. Encrypt messages. Create keys. Sign data. Verify signatures."</p>
-                <p>"Then ask the question that matters: what does each result—and what doesn't it—prove?"</p>
-            </aside>
+            <p class="eyebrow">"AN INTERACTIVE INTRODUCTION TO PRACTICAL CRYPTOGRAPHY"</p>
+            <h1>"Cryptography is everywhere." <span>"Learn what it actually does."</span></h1>
+            <p class="lede">
+                "Every secure website you visit, every locked phone, and much of the software you rely on depends on cryptography."
+            </p>
+            <p class="lede">
+                "The mathematics behind modern cryptography can be sophisticated. TryCrypto lets you use the tools yourself and learn what they guarantee—without needing to implement the algorithms."
+            </p>
         </section>
 
-        <section id="lessons" class="content-section lessons-section">
-            <p class="eyebrow">"THE COURSE"</p>
-            <h2>"Start with a problem. Discover the cryptographic tool that solves it."</h2>
-            <p class="section-copy">"TryCrypto is organized around practical questions: How can I tell whether a file changed? How can I send something privately? How can I prove that a key approved a message? Start with a short intro to bytes and hexadecimal, then use an interactive workbench in each lesson to answer the question yourself."</p>
-            <div class="lesson-grid">
+        <section class="home-course content-section">
+            <p class="eyebrow">"START HERE"</p>
+            <div class="course-list">
+                <A href="/intro" exact=true attr:class="course-row course-row-start">
+                    <span class="course-number">"INTRO"</span>
+                    <strong>"Bytes & hexadecimal"</strong>
+                    <span class="start-badge">"Start here →"</span>
+                </A>
                 {LESSONS
                     .iter()
                     .map(|lesson| {
                         view! {
-                            <A href=lesson.href exact=true attr:class="lesson-card">
-                                <span>{lesson.number}</span>
-                                <h3>{lesson.title}</h3>
-                                <p>{lesson.description}</p>
-                                <b>"Open lesson →"</b>
+                            <A
+                                href=lesson.href
+                                exact=true
+                                attr:class="course-row"
+                                attr:aria-label=format!("{} — {}", lesson.title, lesson.description)
+                            >
+                                <span class="course-number">{lesson.number}</span>
+                                <strong>{lesson.title}</strong>
+                                <span class="course-arrow">"→"</span>
                             </A>
                         }
                     })
@@ -160,32 +155,24 @@ fn HomePage() -> impl IntoView {
             </div>
         </section>
 
-        <section class="boundary-section">
-            <div>
-                <p class="eyebrow">"WHAT THIS ISN'T"</p>
-                <h2>"You don't need to implement cryptography to understand it."</h2>
+        <section class="home-flow-section content-section">
+            <p class="eyebrow">"ABOUT THE PROJECT"</p>
+            <h2>"Hi, I'm Michael."</h2>
+            <p class="section-copy">"I'm Michael Snoyman, a software engineer, engineering leader, open-source developer, and author. I built TryCrypto because I wanted a straightforward way to explain the cryptographic building blocks we rely on without requiring people to start with the mathematics."</p>
+            <div class="text-links">
+                <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"About Michael ↗"</a>
+                <a href="https://github.com/snoyberg" target="_blank" rel="noopener noreferrer">"GitHub ↗"</a>
+                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog & subscribe ↗"</a>
             </div>
-            <p>"TryCrypto isn't a mathematics course and it isn't a guide to writing cryptographic algorithms. Your browser already provides carefully implemented cryptographic primitives. We'll use those primitives to understand what they are for, how they fit together, and where their guarantees stop."</p>
         </section>
 
-        <section class="about-section content-section">
-            <div>
-                <p class="eyebrow">"ABOUT THE PROJECT"</p>
-                <h2>"Hi, I'm Michael."</h2>
-                <p class="section-copy">"I'm Michael Snoyman, a software engineer, engineering leader, open-source developer, and author. I built TryCrypto because I wanted a straightforward way to explain the cryptographic building blocks we rely on without requiring people to start with the mathematics."</p>
-                <div class="text-links">
-                    <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"About Michael ↗"</a>
-                    <a href="https://github.com/snoyberg" target="_blank" rel="noopener noreferrer">"GitHub ↗"</a>
-                    <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog & subscribe ↗"</a>
-                </div>
-            </div>
-            <aside class="project-teaser">
-                <p class="eyebrow">"WHERE THIS GETS INTERESTING"</p>
-                <h3>"What can a signature really tell us?"</h3>
-                <p>"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder."</p>
-                <p>"I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
+        <section class="home-flow-section content-section">
+            <p class="eyebrow">"WHERE THIS GETS INTERESTING"</p>
+            <h2>"What can a signature really tell us?"</h2>
+            <p class="section-copy">"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder. I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
+            <div class="text-links">
                 <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Follow along on my blog →"</a>
-            </aside>
+            </div>
         </section>
     }
 }

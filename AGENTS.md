@@ -6,7 +6,7 @@ These instructions apply to the entire repository.
 
 The canonical shared brand guide lives in `snoyberg/snoyman.com`:
 
-`https://github.com/snoyberg/snoyman.com/blob/master/docs/brand-guidelines.md`
+[Snoyman web family brand guidelines](https://github.com/snoyberg/snoyman.com/blob/master/docs/brand-guidelines.md)
 
 Before substantial UI, styling, branding, or visual-content work, check the current canonical guide when GitHub access is available. Check it again before finalizing a substantial UI PR if the work may have introduced a new recurring visual pattern.
 

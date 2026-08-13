@@ -1,9 +1,18 @@
 :root {
+  --navy: #102a43;
+  --ink: #1f2933;
+  --muted: #627d98;
+  --teal: #087f8c;
+  --teal-bright: #2f9e9e;
+  --rule: #d9e2ec;
+  --mist: #f7fafc;
+  --white: #ffffff;
+  --page: #f7f7f4;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  color: #17212b;
-  background: #f7f7f4;
+  color: var(--ink);
+  background: var(--page);
   font-synthesis: none;
 }
 
@@ -12,6 +21,9 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(47, 158, 158, 0.09), transparent 28rem),
+    var(--page);
 }
 
 button,
@@ -20,7 +32,20 @@ input {
   font: inherit;
 }
 
-a { color: inherit; }
+a {
+  color: var(--teal);
+  text-underline-offset: 0.16em;
+}
+
+a:hover { color: var(--navy); }
+
+a:focus-visible,
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(8, 127, 140, 0.32);
+  outline-offset: 3px;
+}
 
 .shell {
   width: min(1040px, calc(100% - 32px));
@@ -32,16 +57,17 @@ a { color: inherit; }
 }
 
 .eyebrow {
+  color: var(--teal);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  opacity: 0.62;
 }
 
 h1 {
   max-width: 780px;
   margin: 10px 0 14px;
+  color: var(--navy);
   font-size: clamp(2.7rem, 8vw, 5.7rem);
   line-height: 0.92;
   letter-spacing: -0.055em;
@@ -51,7 +77,7 @@ h1 {
   max-width: 710px;
   font-size: clamp(1.05rem, 2vw, 1.3rem);
   line-height: 1.55;
-  color: #46515b;
+  color: var(--muted);
 }
 
 .privacy-note {
@@ -59,31 +85,35 @@ h1 {
   gap: 8px;
   margin-top: 18px;
   padding: 9px 12px;
-  border: 1px solid #ccd1d3;
+  border: 1px solid var(--rule);
   border-radius: 999px;
-  background: white;
+  background: var(--white);
+  color: var(--ink);
   font-size: 0.9rem;
 }
+
+.privacy-note strong { color: var(--navy); }
 
 .lesson {
   margin: 0 0 28px;
   padding: clamp(22px, 5vw, 38px);
-  border: 1px solid #d8dcdd;
+  border: 1px solid var(--rule);
   border-radius: 20px;
-  background: white;
-  box-shadow: 0 12px 40px rgba(30, 40, 45, 0.04);
+  background: var(--white);
+  box-shadow: 0 12px 40px rgba(16, 42, 67, 0.05);
 }
 
 .lesson-number {
+  color: var(--teal);
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  opacity: 0.55;
 }
 
 .lesson h2 {
   margin: 6px 0 8px;
+  color: var(--navy);
   font-size: clamp(1.65rem, 4vw, 2.4rem);
   letter-spacing: -0.03em;
 }
@@ -93,16 +123,21 @@ h1 {
   line-height: 1.6;
 }
 
+.lesson label strong { color: var(--navy); }
+
 textarea {
   width: 100%;
   min-height: 120px;
   margin-top: 8px;
   padding: 14px;
   resize: vertical;
-  border: 1px solid #bcc4c7;
+  border: 1px solid var(--rule);
   border-radius: 12px;
-  background: #fbfbfa;
+  background: var(--mist);
+  color: var(--ink);
 }
+
+textarea:focus-visible { border-color: var(--teal); }
 
 .output {
   min-height: 52px;
@@ -110,7 +145,7 @@ textarea {
   padding: 14px;
   overflow-wrap: anywhere;
   border-radius: 12px;
-  background: #18212a;
+  background: var(--navy);
   color: #f3f6f7;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   line-height: 1.5;
@@ -119,10 +154,12 @@ textarea {
 .callout {
   margin-top: 18px;
   padding: 16px 18px;
-  border-left: 4px solid #17212b;
-  background: #f2f3ef;
+  border-left: 4px solid var(--teal);
+  background: var(--mist);
   line-height: 1.55;
 }
+
+.callout strong { color: var(--navy); }
 
 .roadmap {
   display: grid;
@@ -138,23 +175,30 @@ textarea {
   align-items: start;
   gap: 10px;
   padding: 14px;
-  border: 1px solid #dde0df;
+  border: 1px solid var(--rule);
   border-radius: 12px;
 }
 
 .roadmap-index {
+  color: var(--teal);
   font-weight: 800;
-  opacity: 0.45;
 }
 
 .status {
   font-size: 0.86rem;
   font-weight: 650;
-  color: #5c676e;
+  color: var(--muted);
 }
 
 footer {
   padding: 24px 0 64px;
-  color: #5b656b;
+  color: var(--muted);
   font-size: 0.92rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
 }

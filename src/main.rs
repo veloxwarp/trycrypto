@@ -200,9 +200,8 @@ fn IntroLesson() -> impl IntoView {
     let (decimal_result, set_decimal_result) = signal(Option::<bool>::None);
     let (show_quiz_nudge, set_show_quiz_nudge) = signal(false);
 
-    let quiz_complete = Memo::new(move |_| {
-        hex_result.get() == Some(true) && decimal_result.get() == Some(true)
-    });
+    let quiz_complete =
+        Memo::new(move |_| hex_result.get() == Some(true) && decimal_result.get() == Some(true));
 
     view! {
         <LessonIntro

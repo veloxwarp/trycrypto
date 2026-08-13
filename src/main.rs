@@ -118,7 +118,6 @@ fn SiteHeader() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     view! {
         <section class="home-hero">
-            <p class="eyebrow">"AN INTERACTIVE INTRODUCTION TO PRACTICAL CRYPTOGRAPHY"</p>
             <h1>"Cryptography is everywhere." <span>"Learn what it actually does."</span></h1>
             <p class="lede">
                 "Every secure website you visit, every locked phone, and much of the software you rely on depends on cryptography."
@@ -126,10 +125,11 @@ fn HomePage() -> impl IntoView {
             <p class="lede">
                 "The mathematics behind modern cryptography can be sophisticated. TryCrypto lets you use the tools yourself and learn what they guarantee—without needing to implement the algorithms."
             </p>
-        </section>
 
-        <section class="home-course content-section">
-            <p class="eyebrow">"START HERE"</p>
+            <p class="course-intro">
+                <strong>"Start learning."</strong>
+                " The lessons below will help you learn the basics of how cryptography works, how it's used, and what its results actually prove."
+            </p>
             <div class="course-list">
                 <A href="/intro" exact=true attr:class="course-row course-row-start">
                     <span class="course-number">"INTRO"</span>
@@ -157,7 +157,7 @@ fn HomePage() -> impl IntoView {
         </section>
 
         <section class="home-flow-section content-section">
-            <p class="eyebrow">"ABOUT THE PROJECT"</p>
+            <p class="eyebrow">"About the project"</p>
             <h2>"Hi, I'm Michael."</h2>
             <p class="section-copy">"I'm Michael Snoyman, a software engineer, engineering leader, open-source developer, and author. I built TryCrypto because I wanted a straightforward way to explain the cryptographic building blocks we rely on without requiring people to start with the mathematics."</p>
             <div class="text-links">
@@ -168,16 +168,24 @@ fn HomePage() -> impl IntoView {
         </section>
 
         <section class="home-flow-section content-section">
-            <p class="eyebrow">"WHERE THIS GETS INTERESTING"</p>
+            <p class="eyebrow">"Where this gets interesting"</p>
             <h2>"What can a signature really tell us?"</h2>
             <p class="section-copy">"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder. I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
+            // TODO: Add a dedicated product-interest mailing-list signup form here before launch.
+        </section>
+
+        <section class="home-start-section content-section">
+            <p class="eyebrow">"Ready to try it?"</p>
+            <h2>"Start with the intro lesson."</h2>
+            <p class="section-copy">"It takes just a few minutes to get comfortable with bytes and hexadecimal before moving on to hashes."</p>
+            <A href="/intro" attr:class="button primary">"Start the intro →"</A>
         </section>
     }
 }
 
 #[component]
 fn IntroLesson() -> impl IntoView {
-    let (decimal_value, set_decimal_value) = signal(173_u16);
+    let (decimal_value, set_decimal_value) = signal(String::from("173"));
     let (hex_value, set_hex_value) = signal(String::from("AD"));
     let (hex_answer, set_hex_answer) = signal(String::new());
     let (hex_result, set_hex_result) = signal(Option::<bool>::None);
@@ -190,20 +198,20 @@ fn IntroLesson() -> impl IntoView {
     view! {
         <LessonIntro
             number="INTRO"
-            eyebrow="A FEW BASICS BEFORE WE START"
+            eyebrow="A few basics before we start"
             title="Bytes & hexadecimal"
             summary="Cryptographic tools work with bytes, and those bytes are often displayed in hexadecimal. You only need a little of both to follow the rest of TryCrypto."
         />
 
         <section class="content-section primer-section">
             <div class="section-heading">
-                <p class="eyebrow">"BYTES"</p>
+                <p class="eyebrow">"Bytes"</p>
                 <h2>"A byte is a number from 0 through 255."</h2>
                 <p class="section-copy">"That's 256 possible values. Cryptographic keys, hashes, ciphertext, and other data are ultimately made up of bytes, so you'll see these values throughout the lessons."</p>
             </div>
 
-            <div class="section-heading">
-                <p class="eyebrow">"HEXADECIMAL"</p>
+            <div class="section-heading section-heading-spaced">
+                <p class="eyebrow">"Hexadecimal"</p>
                 <h2>"A compact way to write byte values."</h2>
                 <p class="section-copy">"The normal number system we use is decimal, or base 10. That means we have 10 possible digits: the numbers 0 through 9. Hexadecimal is base 16, so it needs six additional values. Beyond 0 through 9, it also includes A through F. A means 10, B means 11, and so on through F, which means 15. The letters may be uppercase or lowercase; A and a mean the same value."</p>
                 <p class="section-copy">"In decimal, the number 54 means 5 tens and 4 ones, so its value is 5 × 10 + 4. Hex works the same way, except that in a two-digit hex number the left digit counts sixteens instead of tens. So A5 means 10 × 16 + 5, which is 165 in decimal."</p>
@@ -233,71 +241,77 @@ fn IntroLesson() -> impl IntoView {
         <section class="workbench">
             <div class="workbench-heading">
                 <div>
-                    <p class="eyebrow">"BYTE EXPLORER"</p>
-                    <h2>"Try converting in both directions."</h2>
+                    <p class="eyebrow">"Byte explorer"</p>
+                    <h2>"Decimal and hex are two ways to show the same byte."</h2>
                 </div>
-                <p>"Use the explorer freely. You'll use the same tool for the exercises below."</p>
+                <p>"Type into either field. The other representation updates immediately."</p>
             </div>
 
-            <div class="primer-grid">
-                <div class="mini-workbench">
-                    <p class="eyebrow">"DECIMAL → HEX"</p>
-                    <label for="decimal-value">"Decimal value (0–255)"</label>
+            <div class="byte-converter mini-workbench">
+                <label for="decimal-value">
+                    <span>"Decimal (0–255)"</span>
                     <input
                         id="decimal-value"
-                        type="number"
-                        min="0"
-                        max="255"
-                        prop:value=move || decimal_value.get().to_string()
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="3"
+                        prop:value=move || decimal_value.get()
                         on:input=move |ev| {
-                            if let Ok(value) = event_target_value(&ev).parse::<u16>() {
-                                set_decimal_value.set(value.min(255));
+                            let value = event_target_value(&ev);
+                            if value.chars().all(|c| c.is_ascii_digit()) {
+                                set_decimal_value.set(value.clone());
+                                if value.is_empty() {
+                                    set_hex_value.set(String::new());
+                                } else if let Ok(number) = value.parse::<u16>() {
+                                    if number <= 255 {
+                                        set_hex_value.set(format!("{number:02X}"));
+                                    }
+                                }
                             }
                         }
                     />
-                    <div class="byte-result">
-                        <span>"HEX"</span>
-                        <code>{move || format!("{:02X}", decimal_value.get())}</code>
-                    </div>
-                </div>
-
-                <div class="mini-workbench">
-                    <p class="eyebrow">"HEX → DECIMAL"</p>
-                    <label for="hex-value">"Hex value (00–FF)"</label>
+                </label>
+                <span class="conversion-equals" aria-hidden="true">"="</span>
+                <label for="hex-value">
+                    <span>"Hex (00–FF)"</span>
                     <input
                         id="hex-value"
+                        type="text"
                         maxlength="2"
                         prop:value=move || hex_value.get()
                         on:input=move |ev| {
                             let value = event_target_value(&ev).to_ascii_uppercase();
                             if value.len() <= 2 && value.chars().all(|c| c.is_ascii_hexdigit()) {
-                                set_hex_value.set(value);
+                                set_hex_value.set(value.clone());
+                                if value.is_empty() {
+                                    set_decimal_value.set(String::new());
+                                } else if let Ok(number) = u8::from_str_radix(&value, 16) {
+                                    set_decimal_value.set(number.to_string());
+                                }
                             }
                         }
                     />
-                    <div class="byte-result">
-                        <span>"DECIMAL"</span>
-                        <code>{move || {
-                            u8::from_str_radix(hex_value.get().trim(), 16)
-                                .map(|value| value.to_string())
-                                .unwrap_or_else(|_| "—".to_owned())
-                        }}</code>
-                    </div>
-                </div>
+                </label>
             </div>
             <p class="microcopy">"Try values such as 10, 15, 16, 31, A5, AD, and FF and watch how the two representations correspond."</p>
         </section>
 
         <section id="intro-exercises" class="content-section planned-quiz">
-            <p class="eyebrow">"EXERCISES"</p>
+            <p class="eyebrow">"Exercises"</p>
             <h2>"Use the explorer, then answer two questions."</h2>
             <p class="section-copy">"The goal isn't to memorize hex arithmetic. It's to get comfortable reading the representation and using the tool when you need it."</p>
 
-            <div class="mini-workbench">
+            <div class="mini-workbench exercises-box">
                 <div class="tool-quiz">
-                    <p class="eyebrow">"1 OF 2 · DECIMAL → HEX"</p>
+                    <p class="exercise-number">"1 of 2 · Decimal → hex"</p>
                     <h3>"What is decimal 200 in hex?"</h3>
-                    <div class="quiz-answer-row">
+                    <form
+                        class="quiz-answer-row"
+                        on:submit=move |ev| {
+                            ev.prevent_default();
+                            set_hex_result.set(Some(hex_answer.get().trim().eq_ignore_ascii_case("C8")));
+                        }
+                    >
                         <input
                             aria-label="Hex value for decimal 200"
                             placeholder="Your answer"
@@ -307,26 +321,27 @@ fn IntroLesson() -> impl IntoView {
                                 set_hex_result.set(None);
                             }
                         />
-                        <button
-                            type="button"
-                            on:click=move |_| {
-                                set_hex_result.set(Some(hex_answer.get().trim().eq_ignore_ascii_case("C8")));
-                            }
-                        >"Check"</button>
-                    </div>
+                        <button type="submit">"Check"</button>
+                    </form>
                     <p class="quiz-feedback" aria-live="polite">
                         {move || match hex_result.get() {
                             Some(true) => "Correct. C8 is decimal 200.",
-                            Some(false) => "Not quite. Put 200 into the decimal → hex explorer and check the result.",
+                            Some(false) => "Not quite. Put 200 into the decimal field above and check the hex value.",
                             None => "",
                         }}
                     </p>
                 </div>
 
                 <div class="tool-quiz">
-                    <p class="eyebrow">"2 OF 2 · HEX → DECIMAL"</p>
+                    <p class="exercise-number">"2 of 2 · Hex → decimal"</p>
                     <h3>"What is hex 7B in decimal?"</h3>
-                    <div class="quiz-answer-row">
+                    <form
+                        class="quiz-answer-row"
+                        on:submit=move |ev| {
+                            ev.prevent_default();
+                            set_decimal_result.set(Some(decimal_answer.get().trim() == "123"));
+                        }
+                    >
                         <input
                             aria-label="Decimal value for hex 7B"
                             placeholder="Your answer"
@@ -336,23 +351,18 @@ fn IntroLesson() -> impl IntoView {
                                 set_decimal_result.set(None);
                             }
                         />
-                        <button
-                            type="button"
-                            on:click=move |_| {
-                                set_decimal_result.set(Some(decimal_answer.get().trim() == "123"));
-                            }
-                        >"Check"</button>
-                    </div>
+                        <button type="submit">"Check"</button>
+                    </form>
                     <p class="quiz-feedback" aria-live="polite">
                         {move || match decimal_result.get() {
                             Some(true) => "Correct. 7B is decimal 123.",
-                            Some(false) => "Not quite. Put 7B into the hex → decimal explorer and check the result.",
+                            Some(false) => "Not quite. Put 7B into the hex field above and check the decimal value.",
                             None => "",
                         }}
                     </p>
                 </div>
 
-                <p class="quiz-feedback" aria-live="polite">
+                <p class="exercise-progress" aria-live="polite">
                     {move || {
                         let completed = [hex_result.get(), decimal_result.get()]
                             .into_iter()
@@ -361,7 +371,7 @@ fn IntroLesson() -> impl IntoView {
                         match completed {
                             0 => "Two exercises to go.".to_owned(),
                             1 => "One down, one to go.".to_owned(),
-                            _ => "Nice — intro complete. You're ready for hashes.".to_owned(),
+                            _ => "Both exercises complete.".to_owned(),
                         }
                     }}
                 </p>
@@ -372,7 +382,7 @@ fn IntroLesson() -> impl IntoView {
             exercises_complete
             exercises_id="intro-exercises"
             next_href="/hashes"
-            next_label="01 — Hashes →"
+            next_label="Continue to 01 — Hashes →"
         />
     }
 }
@@ -417,13 +427,13 @@ fn HashLesson() -> impl IntoView {
     view! {
         <LessonIntro
             number="01"
-            eyebrow="CHECK THAT DATA ARRIVED INTACT"
+            eyebrow="Check that data arrived intact"
             title="Hashes"
             summary="A hash gives us a small fingerprint for data, even when the data itself is enormous."
         />
 
         <section class="motivation-section content-section">
-            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <p class="eyebrow">"Why would I want this?"</p>
             <h2>"I sent you a 10 GB file. Did you get exactly what I sent?"</h2>
             <div class="prose-grid">
                 <p>"One solution is for you to send the entire 10 GB file back to me so I can compare the two copies. That works, but it's ridiculous: verifying the transfer costs another 10 GB transfer."</p>
@@ -437,7 +447,7 @@ fn HashLesson() -> impl IntoView {
 
         <section class="workbench">
             <div class="workbench-heading">
-                <div><p class="eyebrow">"BROWSER WORKBENCH"</p><h2>"Try SHA-256 yourself."</h2></div>
+                <div><p class="eyebrow">"Browser workbench"</p><h2>"Try SHA-256 yourself."</h2></div>
                 <p>"Change the input—even by one character—and compare the 64 hex digits below. Everything happens locally in your browser."</p>
             </div>
             <div class="hash-tool">
@@ -461,7 +471,7 @@ fn HashLesson() -> impl IntoView {
         </section>
 
         <section id="hash-exercises" class="content-section planned-quiz">
-            <p class="eyebrow">"EXERCISES"</p>
+            <p class="eyebrow">"Exercises"</p>
             <h2>"Use the workbench, then answer."</h2>
             <div class="workbench-quiz">
                 <h3>"Which message matches this hash?"</h3>
@@ -495,7 +505,7 @@ fn HashLesson() -> impl IntoView {
         </section>
 
         <section class="lesson-explanation content-section">
-            <p class="eyebrow">"WHAT DID THIS PROVE?"</p>
+            <p class="eyebrow">"What did this prove?"</p>
             <h2>"The hash checks the bytes—not their source or their truth."</h2>
             <p class="section-copy">"If I give you a trusted SHA-256 digest and your file produces the same digest, that's excellent evidence that you have the exact file I meant. But the hash itself cannot tell you who created the file or who gave you the digest."</p>
             <div class="principles">
@@ -505,7 +515,7 @@ fn HashLesson() -> impl IntoView {
             </div>
 
             <aside class="side-note">
-                <p class="eyebrow">"ONE MORE PLACE HASHES SHOW UP"</p>
+                <p class="eyebrow">"One more place hashes show up"</p>
                 <h3>"Proof of work"</h3>
                 <p>"Hashes are also useful when we want a task that is expensive to perform but cheap to verify. Proof-of-work systems repeatedly vary data and hash it until they find a result meeting a difficult condition. Checking the winning hash is easy; finding it required lots of trial and error."</p>
             </aside>
@@ -515,7 +525,7 @@ fn HashLesson() -> impl IntoView {
             exercises_complete
             exercises_id="hash-exercises"
             next_href="/symmetric-encryption"
-            next_label="02 — Shared-secret encryption →"
+            next_label="Continue to 02 — Shared-secret encryption →"
         />
     }
 }
@@ -529,12 +539,12 @@ fn SymmetricEncryptionPage() -> impl IntoView {
         <LessonIntro
             number="02"
             title="Shared-secret encryption"
-            eyebrow="ONE SECRET, TWO DIRECTIONS"
+            eyebrow="One secret, two directions"
             summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
         />
 
         <section class="motivation-section content-section">
-            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <p class="eyebrow">"Why would I want this?"</p>
             <h2>"You and I already share a secret. How can I send you data that anyone may intercept, but only we can read?"</h2>
             <div class="prose-grid">
                 <p>"Shared-secret encryption gives both of us the same encryption key. I use it to turn readable data into ciphertext; you use the same key to recover the original data. Someone who sees only the ciphertext should not be able to learn the message without the key."</p>
@@ -548,7 +558,7 @@ fn SymmetricEncryptionPage() -> impl IntoView {
 
         <section class="coming-section">
             <div>
-                <p class="eyebrow">"BROWSER WORKBENCH"</p>
+                <p class="eyebrow">"Browser workbench"</p>
                 <h2>"Work in progress."</h2>
                 <p>"The workbench will be built around both shared-key messaging and the password-protected backup scenario rather than around abstract definitions."</p>
             </div>
@@ -570,7 +580,7 @@ fn SymmetricEncryptionPage() -> impl IntoView {
             exercises_complete
             exercises_id="lesson-exercises"
             next_href="/keypairs"
-            next_label="03 — Public/private keypairs →"
+            next_label="Continue to 03 — Public/private keypairs →"
         />
     }
 }
@@ -581,13 +591,13 @@ fn KeypairsPage() -> impl IntoView {
         <ComingLesson
             number="03"
             title="Public/private keypairs"
-            eyebrow="TWO KEYS, DIFFERENT JOBS"
+            eyebrow="Two keys, different jobs"
             summary="Public-key cryptography separates material that is safe to publish from secret material that must remain under your control."
             problem="Shared-secret encryption is useful—but first we somehow had to share a secret. Can I publish something useful without publishing the secret that gives me control?"
             challenge="Generate a keypair in the workbench, then identify which operations still work when you keep only the public half and which require the private half."
             points=&["Generate a keypair in the browser", "Compare public and private material", "Understand what possession of each key permits"]
             next_href="/public-key-encryption"
-            next_label="04 — Public-key encryption →"
+            next_label="Continue to 04 — Public-key encryption →"
         />
     }
 }
@@ -598,13 +608,13 @@ fn PublicKeyEncryptionPage() -> impl IntoView {
         <ComingLesson
             number="04"
             title="Public-key encryption"
-            eyebrow="ENCRYPT FOR SOMEONE ELSE"
+            eyebrow="Encrypt for someone else"
             summary="A public key can let other people protect data for you without giving them the secret needed to decrypt it."
             problem="You need to send me confidential data, but we've never exchanged a shared secret. Can you encrypt something that only I can open?"
             challenge="Use two generated keypairs to encrypt for one recipient, then prove with the workbench that the other private key cannot decrypt the ciphertext."
             points=&["Encrypt using a recipient's public key", "Decrypt using the corresponding private key", "Contrast this with shared-secret encryption"]
             next_href="/signatures"
-            next_label="05 — Digital signatures →"
+            next_label="Continue to 05 — Digital signatures →"
         />
     }
 }
@@ -615,13 +625,13 @@ fn SignaturesPage() -> impl IntoView {
         <ComingLesson
             number="05"
             title="Digital signatures"
-            eyebrow="PROVE CONTROL OF A KEY"
+            eyebrow="Prove control of a key"
             summary="A signature binds a private key to exact data in a way that anyone with the public key can verify."
             problem="I publish a software release and you download it from somewhere else. How can you check that these exact bytes are the ones the holder of my private key approved?"
             challenge="Use the workbench to verify a signature, then change one character in the message and watch the same signature fail."
             points=&["Sign exact data with a private key", "Verify with the public key", "See how hashes and signatures fit together"]
             next_href="/verification"
-            next_label="06 — Verification & identity →"
+            next_label="Continue to 06 — Verification & identity →"
         />
     }
 }
@@ -632,7 +642,7 @@ fn VerificationPage() -> impl IntoView {
         <ComingLesson
             number="06"
             title="Verification & identity"
-            eyebrow="WHAT DID WE ACTUALLY PROVE?"
+            eyebrow="What did we actually prove?"
             summary="Cryptography can give precise answers about keys and data. Connecting those answers to people, organizations, and truth requires additional evidence."
             problem="A signature verifies successfully against a public key. Does that prove Michael Snoyman signed the message? Not by itself."
             challenge="Use the verification workbench to establish exactly what a signature proves, then separate those facts from claims about who controls the key and whether the signed statement is true."
@@ -648,13 +658,13 @@ fn CompletionPage() -> impl IntoView {
     view! {
         <LessonIntro
             number="DONE"
-            eyebrow="YOU'VE REACHED THE END"
+            eyebrow="You've reached the end"
             title="Now ask better questions."
             summary="Cryptography gives precise tools and precise guarantees. The interesting part is knowing where those guarantees stop."
         />
 
         <section class="content-section">
-            <p class="eyebrow">"TRYCRYPTO COMPLETE"</p>
+            <p class="eyebrow">"TryCrypto complete"</p>
             <h2>"From bytes to signatures—and then beyond the signatures."</h2>
             <p class="section-copy">"You've followed the path from representation and hashing through encryption, keypairs, signatures, and the harder questions of verification and identity. Revisit any lesson whenever you want to experiment with the tools again."</p>
             <div class="hero-actions">
@@ -664,7 +674,7 @@ fn CompletionPage() -> impl IntoView {
         </section>
 
         <section class="home-flow-section content-section">
-            <p class="eyebrow">"WHERE THIS LEADS"</p>
+            <p class="eyebrow">"Where this leads"</p>
             <h2>"What can a signature really tell us?"</h2>
             <p class="section-copy">"That's the question behind a new protocol I'm working on around cryptographic evidence, identity, provenance, and trust. I'll share more when there's something real to show."</p>
         </section>
@@ -694,13 +704,13 @@ fn LessonEnd(
     next_label: &'static str,
 ) -> impl IntoView {
     view! {
-        <section class="content-section">
+        <section class="lesson-end content-section">
             <Show
                 when=move || exercises_complete.get()
                 fallback=move || view! {
-                    <div class="precision-note">
-                        <p class="eyebrow">"EXERCISES NOT COMPLETED"</p>
-                        <strong>"Want to try the exercises before moving on?"</strong>
+                    <div class="lesson-status">
+                        <p class="eyebrow">"Exercises not completed"</p>
+                        <h3>"Want to try them before moving on?"</h3>
                         <p>"They're optional, but they're where you use the lesson's tool for yourself instead of only reading about it."</p>
                         <div class="hero-actions">
                             <a class="button primary" href=format!("#{exercises_id}")>"Go to exercises ↑"</a>
@@ -709,9 +719,12 @@ fn LessonEnd(
                     </div>
                 }
             >
-                <A href=next_href attr:class="next-lesson">
-                    <span>"NEXT"</span><b>{next_label}</b>
-                </A>
+                <div class="lesson-status lesson-status-complete">
+                    <p class="eyebrow">"Exercises complete"</p>
+                    <h3>"Nice work. You're ready to move on."</h3>
+                    <p>"You've used the lesson's tool yourself and completed the exercises."</p>
+                    <A href=next_href attr:class="button primary">{next_label}</A>
+                </div>
             </Show>
         </section>
     }
@@ -725,22 +738,19 @@ fn ReviewExercise(
 ) -> impl IntoView {
     view! {
         <section id="lesson-exercises" class="content-section planned-quiz">
-            <p class="eyebrow">"EXERCISES"</p>
+            <p class="eyebrow">"Exercises"</p>
             <h2>"Use the workbench, then answer."</h2>
             <p class="section-copy">{description}</p>
-            <div class="mini-workbench">
-                <p class="eyebrow">"TEMPORARY REVIEW EXERCISE"</p>
+            <div class="mini-workbench exercises-box">
+                <p class="exercise-number">"Temporary review exercise"</p>
                 <h3>"Complete this placeholder to review the lesson flow."</h3>
                 <p class="section-copy">"This control is intentionally temporary. It will be replaced by a real workbench-driven exercise before this PR is merged."</p>
-                <button
-                    type="button"
-                    on:click=move |_| set_exercise_done.set(true)
-                >
+                <button type="button" on:click=move |_| set_exercise_done.set(true)>
                     "Mark exercise complete"
                 </button>
                 <p class="quiz-feedback" aria-live="polite">
                     {move || if exercise_done.get() {
-                        "Exercise complete. The normal Next lesson link is now available."
+                        "Exercise complete."
                     } else {
                         ""
                     }}
@@ -768,22 +778,18 @@ fn ComingLesson(
     view! {
         <LessonIntro number eyebrow title summary />
         <section class="motivation-section content-section">
-            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <p class="eyebrow">"Why would I want this?"</p>
             <h2>{problem}</h2>
         </section>
         <section class="coming-section">
             <div>
-                <p class="eyebrow">"BROWSER WORKBENCH"</p>
+                <p class="eyebrow">"Browser workbench"</p>
                 <h2>"Work in progress."</h2>
                 <p>"The interactive tool will be built around the scenario above rather than around abstract definitions."</p>
             </div>
             <ol>{points.iter().map(|point| view! { <li>{*point}</li> }).collect_view()}</ol>
         </section>
-        <ReviewExercise
-            description=challenge
-            exercise_done
-            set_exercise_done
-        />
+        <ReviewExercise description=challenge exercise_done set_exercise_done />
         <LessonEnd
             exercises_complete
             exercises_id="lesson-exercises"
@@ -809,11 +815,18 @@ fn NotFound() -> impl IntoView {
 fn SiteFooter() -> impl IntoView {
     view! {
         <footer>
-            <span>"TryCrypto — an educational project by Michael Snoyman."</span>
-            <span>
-                <a href="https://github.com/veloxwarp/trycrypto" target="_blank" rel="noopener noreferrer">"Source on GitHub ↗"</a>
-                " · Browser cryptography is for learning here, not production key management."
-            </span>
+            <div class="footer-primary">
+                <span>"TryCrypto — an educational project by "</span>
+                <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"Michael Snoyman"</a>
+                <span>"."</span>
+            </div>
+            <div class="footer-links">
+                <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"Homepage ↗"</a>
+                <a href="https://github.com/snoyberg" target="_blank" rel="noopener noreferrer">"GitHub ↗"</a>
+                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog ↗"</a>
+                <a href="https://github.com/veloxwarp/trycrypto" target="_blank" rel="noopener noreferrer">"Source ↗"</a>
+            </div>
+            <p class="footer-note">"Browser cryptography is for learning here, not production key management."</p>
         </footer>
     }
 }

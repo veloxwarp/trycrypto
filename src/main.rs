@@ -7,6 +7,7 @@ mod hashes;
 mod home;
 mod intro;
 mod intro_exercises;
+mod key_math;
 mod keypair_exercises;
 mod keypairs;
 mod public_key;

@@ -171,7 +171,6 @@ fn HomePage() -> impl IntoView {
             <p class="eyebrow">"WHERE THIS GETS INTERESTING"</p>
             <h2>"What can a signature really tell us?"</h2>
             <p class="section-copy">"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder. I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
-            <p class="microcopy">"I'm setting up a dedicated mailing list for people interested in that work. The sign-up form will live here rather than sending product-interest traffic to my general blog."</p>
         </section>
     }
 }
@@ -523,6 +522,9 @@ fn HashLesson() -> impl IntoView {
 
 #[component]
 fn SymmetricEncryptionPage() -> impl IntoView {
+    let (exercise_done, set_exercise_done) = signal(false);
+    let exercises_complete = Memo::new(move |_| exercise_done.get());
+
     view! {
         <LessonIntro
             number="02"
@@ -558,13 +560,18 @@ fn SymmetricEncryptionPage() -> impl IntoView {
             </ol>
         </section>
 
-        <section class="planned-quiz content-section">
-            <p class="eyebrow">"EXERCISES"</p>
-            <h2>"Use the workbench, then answer."</h2>
-            <p class="section-copy">"When the workbench is finished, the exercises will have you derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then you'll change one input and observe what breaks."</p>
-        </section>
+        <ReviewExercise
+            description="The final exercises will have you derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then you'll change one input and observe what breaks."
+            exercise_done
+            set_exercise_done
+        />
 
-        <LessonContinue next_href="/keypairs" next_label="03 — Public/private keypairs →" />
+        <LessonEnd
+            exercises_complete
+            exercises_id="lesson-exercises"
+            next_href="/keypairs"
+            next_label="03 — Public/private keypairs →"
+        />
     }
 }
 
@@ -659,8 +666,7 @@ fn CompletionPage() -> impl IntoView {
         <section class="home-flow-section content-section">
             <p class="eyebrow">"WHERE THIS LEADS"</p>
             <h2>"What can a signature really tell us?"</h2>
-            <p class="section-copy">"That's the question behind a new protocol I'm working on around cryptographic evidence, identity, provenance, and trust. I'm setting up a dedicated mailing list for people who want to hear when there's something real to show."</p>
-            <p class="microcopy">"Product-interest sign-up coming shortly."</p>
+            <p class="section-copy">"That's the question behind a new protocol I'm working on around cryptographic evidence, identity, provenance, and trust. I'll share more when there's something real to show."</p>
         </section>
     }
 }
@@ -712,12 +718,34 @@ fn LessonEnd(
 }
 
 #[component]
-fn LessonContinue(next_href: &'static str, next_label: &'static str) -> impl IntoView {
+fn ReviewExercise(
+    description: &'static str,
+    exercise_done: ReadSignal<bool>,
+    set_exercise_done: WriteSignal<bool>,
+) -> impl IntoView {
     view! {
-        <section class="content-section">
-            <A href=next_href attr:class="next-lesson">
-                <span>"NEXT"</span><b>{next_label}</b>
-            </A>
+        <section id="lesson-exercises" class="content-section planned-quiz">
+            <p class="eyebrow">"EXERCISES"</p>
+            <h2>"Use the workbench, then answer."</h2>
+            <p class="section-copy">{description}</p>
+            <div class="mini-workbench">
+                <p class="eyebrow">"TEMPORARY REVIEW EXERCISE"</p>
+                <h3>"Complete this placeholder to review the lesson flow."</h3>
+                <p class="section-copy">"This control is intentionally temporary. It will be replaced by a real workbench-driven exercise before this PR is merged."</p>
+                <button
+                    type="button"
+                    on:click=move |_| set_exercise_done.set(true)
+                >
+                    "Mark exercise complete"
+                </button>
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || if exercise_done.get() {
+                        "Exercise complete. The normal Next lesson link is now available."
+                    } else {
+                        ""
+                    }}
+                </p>
+            </div>
         </section>
     }
 }
@@ -734,6 +762,9 @@ fn ComingLesson(
     next_href: &'static str,
     next_label: &'static str,
 ) -> impl IntoView {
+    let (exercise_done, set_exercise_done) = signal(false);
+    let exercises_complete = Memo::new(move |_| exercise_done.get());
+
     view! {
         <LessonIntro number eyebrow title summary />
         <section class="motivation-section content-section">
@@ -748,12 +779,17 @@ fn ComingLesson(
             </div>
             <ol>{points.iter().map(|point| view! { <li>{*point}</li> }).collect_view()}</ol>
         </section>
-        <section class="planned-quiz content-section">
-            <p class="eyebrow">"EXERCISES"</p>
-            <h2>"Use the workbench, then answer."</h2>
-            <p class="section-copy">{challenge}</p>
-        </section>
-        <LessonContinue next_href next_label />
+        <ReviewExercise
+            description=challenge
+            exercise_done
+            set_exercise_done
+        />
+        <LessonEnd
+            exercises_complete
+            exercises_id="lesson-exercises"
+            next_href
+            next_label
+        />
     }
 }
 

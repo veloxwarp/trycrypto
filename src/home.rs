@@ -12,8 +12,8 @@ pub fn HomePage() -> impl IntoView {
             <div class="course-list">
                 <A href="/intro" attr:class="course-row course-row-start"><span class="course-number">"INTRO"</span><strong>"Bytes & hexadecimal"</strong><span class="start-badge">"Start here →"</span></A>
                 <A href="/hashes" attr:class="course-row"><span class="course-number">"01"</span><strong>"Hashes"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/symmetric-encryption" attr:class="course-row"><span class="course-number">"02"</span><strong>"Shared-secret encryption"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/keypairs" attr:class="course-row"><span class="course-number">"03"</span><strong>"Public/private keypairs"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/symmetric-encryption" attr:class="course-row"><span class="course-number">"02"</span><strong>"Shared-key encryption"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/keypairs" attr:class="course-row"><span class="course-number">"03"</span><strong>"Public & private keys"</strong><span class="course-arrow">"→"</span></A>
                 <A href="/public-key-encryption" attr:class="course-row"><span class="course-number">"04"</span><strong>"Public-key encryption"</strong><span class="course-arrow">"→"</span></A>
                 <A href="/signatures" attr:class="course-row"><span class="course-number">"05"</span><strong>"Digital signatures"</strong><span class="course-arrow">"→"</span></A>
                 <A href="/verification" attr:class="course-row"><span class="course-number">"06"</span><strong>"Verification & identity"</strong><span class="course-arrow">"→"</span></A>

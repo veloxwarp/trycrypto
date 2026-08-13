@@ -106,11 +106,31 @@ fn HashLesson() -> impl IntoView {
 #[component]
 fn ComingNext() -> impl IntoView {
     let lessons = [
-        ("02", "Shared-secret encryption", "AES-GCM: one secret, encryption and decryption."),
-        ("03", "Public/private key pairs", "Generate a keypair and see which half is safe to share."),
-        ("04", "Public-key encryption", "Encrypt for someone without possessing their private key."),
-        ("05", "Digital signatures", "Sign with a private key; verify with a public key."),
-        ("06", "Identity is not a key", "A valid signature proves a key signed—not automatically which human did."),
+        (
+            "02",
+            "Shared-secret encryption",
+            "AES-GCM: one secret, encryption and decryption.",
+        ),
+        (
+            "03",
+            "Public/private key pairs",
+            "Generate a keypair and see which half is safe to share.",
+        ),
+        (
+            "04",
+            "Public-key encryption",
+            "Encrypt for someone without possessing their private key.",
+        ),
+        (
+            "05",
+            "Digital signatures",
+            "Sign with a private key; verify with a public key.",
+        ),
+        (
+            "06",
+            "Identity is not a key",
+            "A valid signature proves a key signed—not automatically which human did.",
+        ),
     ];
 
     view! {

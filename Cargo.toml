@@ -9,11 +9,11 @@ description = "An interactive introduction to practical cryptography"
 hex = "0.4"
 js-sys = "0.3.103"
 leptos = { version = "0.8.20", features = ["csr"] }
+leptos_router = "0.8.14"
 wasm-bindgen = "0.2.126"
 wasm-bindgen-futures = "0.4.76"
 web-sys = { version = "0.3.103", features = [
     "Crypto",
-    "Location",
     "SubtleCrypto",
     "Window",
 ] }

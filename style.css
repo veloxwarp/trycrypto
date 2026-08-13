@@ -131,7 +131,7 @@ textarea {
   margin-top: 8px;
   padding: 14px;
   resize: vertical;
-  border: 1px solid #b8c6d1;
+  border: 1px solid var(--rule);
   border-radius: 12px;
   background: var(--mist);
   color: var(--ink);

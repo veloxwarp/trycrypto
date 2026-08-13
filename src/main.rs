@@ -185,7 +185,6 @@ fn IntroLesson() -> impl IntoView {
     let (hex_result, set_hex_result) = signal(Option::<bool>::None);
     let (decimal_answer, set_decimal_answer) = signal(String::new());
     let (decimal_result, set_decimal_result) = signal(Option::<bool>::None);
-    let (show_quiz_nudge, set_show_quiz_nudge) = signal(false);
 
     let quiz_complete =
         Memo::new(move |_| hex_result.get() == Some(true) && decimal_result.get() == Some(true));
@@ -374,23 +373,15 @@ fn IntroLesson() -> impl IntoView {
         <section class="content-section">
             <Show
                 when=move || quiz_complete.get()
-                fallback=move || view! {
-                    <div>
-                        <a
-                            href="#intro-quiz"
-                            class="next-lesson"
-                            on:click=move |_| set_show_quiz_nudge.set(true)
-                        >
-                            <span>"NEXT"</span>
-                            <b>"01 — Hashes → · Quick check not finished"</b>
-                        </a>
-                        <Show when=move || show_quiz_nudge.get()>
-                            <div class="precision-note">
-                                <strong>"Almost there."</strong>
-                                <p>"The quick check is meant to make the lesson stick. Finish the two questions above, or skip it if you'd rather keep moving."</p>
-                                <A href="/hashes">"Skip quiz and continue to Hashes →"</A>
-                            </div>
-                        </Show>
+                fallback=|| view! {
+                    <div class="precision-note">
+                        <p class="eyebrow">"QUICK CHECK NOT COMPLETED"</p>
+                        <strong>"Want to test it before moving on?"</strong>
+                        <p>"The quick check is optional, but using the explorer once helps make the representation familiar."</p>
+                        <div class="hero-actions">
+                            <a class="button primary" href="#intro-quiz">"Go to quick check ↑"</a>
+                            <A href="/hashes" attr:class="button ghost">"Skip and continue →"</A>
+                        </div>
                     </div>
                 }
             >
@@ -483,7 +474,7 @@ fn HashLesson() -> impl IntoView {
                 </div>
             </div>
 
-            <div class="workbench-quiz">
+            <div id="hash-quiz" class="workbench-quiz">
                 <p class="eyebrow">"USE THE WORKBENCH"</p>
                 <h3>"Which message matches this hash?"</h3>
                 <code class="target-hash">{CHALLENGE_HASH}</code>
@@ -531,9 +522,24 @@ fn HashLesson() -> impl IntoView {
                 <p>"Hashes are also useful when we want a task that is expensive to perform but cheap to verify. Proof-of-work systems repeatedly vary data and hash it until they find a result meeting a difficult condition. Checking the winning hash is easy; finding it required lots of trial and error."</p>
             </aside>
 
-            <A href="/symmetric-encryption" attr:class="next-lesson">
-                <span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b>
-            </A>
+            <Show
+                when=move || challenge_result.get() == Some(true)
+                fallback=|| view! {
+                    <div class="precision-note">
+                        <p class="eyebrow">"QUICK CHECK NOT COMPLETED"</p>
+                        <strong>"Want to test your understanding first?"</strong>
+                        <p>"The quick check is optional, but it gives you a chance to verify a hash match yourself before moving on."</p>
+                        <div class="hero-actions">
+                            <a class="button primary" href="#hash-quiz">"Go to quick check ↑"</a>
+                            <A href="/symmetric-encryption" attr:class="button ghost">"Skip and continue →"</A>
+                        </div>
+                    </div>
+                }
+            >
+                <A href="/symmetric-encryption" attr:class="next-lesson">
+                    <span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b>
+                </A>
+            </Show>
         </section>
     }
 }

@@ -45,3 +45,8 @@ if ! command -v trunk >/dev/null 2>&1 \
 fi
 
 trunk build --release
+
+if [[ -d assets ]]; then
+  rm -rf dist/assets
+  cp -R assets dist/assets
+fi

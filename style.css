@@ -59,7 +59,7 @@ a { color: inherit; }
   color: var(--muted);
 }
 .site-header nav a:hover,
-.site-header nav a.active { color: var(--ink); border-bottom-color: var(--teal); }
+.site-header nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--teal); }
 
 .eyebrow {
   font: 650 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -293,6 +293,11 @@ footer {
   font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 footer a { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .lesson-card { transition: none; }
+}
 
 @media (max-width: 950px) {
   .home-hero, .about-section, .boundary-section, .coming-section { grid-template-columns: 1fr; }

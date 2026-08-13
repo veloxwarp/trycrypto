@@ -1,0 +1,72 @@
+:root {
+  --family-navy: #102a43;
+  --family-ink: #1f2933;
+  --family-muted: #627d98;
+  --family-teal: #087f8c;
+  --family-teal-bright: #2f9e9e;
+  --family-rule: #d9e2ec;
+  --family-mist: #f7fafc;
+  --family-white: #ffffff;
+  color: var(--family-ink);
+  background: var(--family-mist);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(47, 158, 158, 0.10), transparent 24rem),
+    var(--family-mist);
+}
+
+.eyebrow,
+.lesson-number,
+.roadmap-index {
+  color: var(--family-teal);
+  opacity: 1;
+}
+
+.lede,
+.status,
+footer {
+  color: var(--family-muted);
+}
+
+.lesson,
+.privacy-note,
+.roadmap li {
+  border-color: var(--family-rule);
+}
+
+.lesson {
+  box-shadow: 0 12px 40px rgba(16, 42, 67, 0.045);
+}
+
+textarea {
+  border-color: #b8c7d1;
+  background: var(--family-white);
+}
+
+.output {
+  background: var(--family-navy);
+}
+
+.callout {
+  border-left-color: var(--family-teal);
+  background: #eef7f7;
+}
+
+a:focus-visible,
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(8, 127, 140, 0.3);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

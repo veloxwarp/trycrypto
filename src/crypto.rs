@@ -68,8 +68,8 @@ pub async fn sha256_hex(input: &str) -> Result<String, JsValue> {
 }
 
 pub async fn derive_aes_key_hex(passphrase: &str, salt_hex: &str) -> Result<String, JsValue> {
-    let salt = hex::decode(salt_hex)
-        .map_err(|_| JsValue::from_str("salt must be valid hexadecimal"))?;
+    let salt =
+        hex::decode(salt_hex).map_err(|_| JsValue::from_str("salt must be valid hexadecimal"))?;
 
     let passphrase_bytes = Uint8Array::from(passphrase.as_bytes());
     let base_key = subtle()?
@@ -101,12 +101,9 @@ pub async fn derive_aes_key_hex(passphrase: &str, salt_hex: &str) -> Result<Stri
     Ok(hex::encode(Uint8Array::new(&bits).to_vec()))
 }
 
-pub async fn aes_gcm_encrypt(
-    key_hex: &str,
-    plaintext: &str,
-) -> Result<(String, String), JsValue> {
-    let key_bytes = hex::decode(key_hex)
-        .map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
+pub async fn aes_gcm_encrypt(key_hex: &str, plaintext: &str) -> Result<(String, String), JsValue> {
+    let key_bytes =
+        hex::decode(key_hex).map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
     let key = import_aes_key(&key_bytes).await?;
 
     let mut iv = vec![0_u8; 12];
@@ -128,10 +125,10 @@ pub async fn aes_gcm_decrypt(
     iv_hex: &str,
     ciphertext_hex: &str,
 ) -> Result<String, JsValue> {
-    let key_bytes = hex::decode(key_hex)
-        .map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
-    let iv = hex::decode(iv_hex)
-        .map_err(|_| JsValue::from_str("nonce must be valid hexadecimal"))?;
+    let key_bytes =
+        hex::decode(key_hex).map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
+    let iv =
+        hex::decode(iv_hex).map_err(|_| JsValue::from_str("nonce must be valid hexadecimal"))?;
     let ciphertext = hex::decode(ciphertext_hex)
         .map_err(|_| JsValue::from_str("ciphertext must be valid hexadecimal"))?;
 

@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - main
+      - site-restructure
 
 permissions:
   contents: read

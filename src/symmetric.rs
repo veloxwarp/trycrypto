@@ -5,30 +5,28 @@ use crate::{LessonEnd, LessonIntro, crypto};
 
 #[component]
 pub fn SymmetricEncryptionLesson() -> impl IntoView {
-    let initial_salt =
-        crypto::random_hex(16).unwrap_or_else(|_| "00112233445566778899aabbccddeeff".to_owned());
+    let initial_key = crypto::random_hex(32).unwrap_or_else(|_| {
+        "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff".to_owned()
+    });
 
-    let (passphrase, set_passphrase) = signal(String::from("my backup passphrase"));
-    let (salt, set_salt) = signal(initial_salt);
-    let (derived_key, set_derived_key) = signal(String::new());
-    let (derive_feedback, set_derive_feedback) = signal(String::new());
+    let (shared_key, set_shared_key) = signal(initial_key.clone());
+    let (key_feedback, set_key_feedback) = signal(String::new());
 
-    let (encrypt_key, set_encrypt_key) = signal(String::new());
     let (plaintext, set_plaintext) = signal(String::from("My important backup contents"));
     let (nonce, set_nonce) = signal(String::new());
     let (ciphertext, set_ciphertext) = signal(String::new());
     let (encrypt_feedback, set_encrypt_feedback) = signal(String::new());
 
-    let (decrypt_key, set_decrypt_key) = signal(String::new());
+    let (decrypt_key, set_decrypt_key) = signal(initial_key);
     let (decrypt_nonce, set_decrypt_nonce) = signal(String::new());
     let (decrypt_ciphertext, set_decrypt_ciphertext) = signal(String::new());
     let (decrypted_text, set_decrypted_text) = signal(String::new());
     let (decrypt_feedback, set_decrypt_feedback) = signal(String::new());
 
-    let (passphrase_exercise, set_passphrase_exercise) = signal(Option::<bool>::None);
+    let (round_trip_exercise, set_round_trip_exercise) = signal(Option::<bool>::None);
     let (wrong_key_exercise, set_wrong_key_exercise) = signal(Option::<bool>::None);
     let exercises_complete = Memo::new(move |_| {
-        passphrase_exercise.get() == Some(true) && wrong_key_exercise.get() == Some(true)
+        round_trip_exercise.get() == Some(true) && wrong_key_exercise.get() == Some(true)
     });
 
     view! {
@@ -40,105 +38,57 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         />
 
         <section class="motivation-section content-section">
-            <p class="eyebrow">"Why would I want this?"</p>
             <h2>"I want to store my backup somewhere else. How do I stop the storage provider from reading it?"</h2>
-            <div class="prose-grid">
-                <p>"Before uploading the backup, I can encrypt it with a secret key. The storage provider sees only ciphertext. Later, I use that same key to decrypt the backup and recover the original data. This is called shared-secret or symmetric encryption: the same secret is used in both directions."</p>
-                <p>"A random encryption key is great for cryptography but annoying to remember. One practical option is to start with a password or passphrase and run it through a key-derivation function. That gives us the fixed-size key that AES-GCM needs. Present-you can encrypt the backup; future-you can derive the same key and decrypt it."</p>
-            </div>
-            <aside class="precision-note">
-                <strong>"Passphrase + salt → key."</strong>
-                <p>"The salt isn't secret; you keep it with the encrypted backup. Using the same passphrase and the same salt derives the same key. In this lesson the browser uses PBKDF2 with SHA-256 to demonstrate that step, then uses the resulting 256-bit key with AES-GCM."</p>
-            </aside>
+            <p class="section-copy">"Before uploading the backup, I can encrypt it with a secret key. The storage provider sees only ciphertext. Later, I use that same key to decrypt the backup and recover the original data. This is called shared-secret or symmetric encryption: the same secret key is used for both encryption and decryption."</p>
+            <p class="section-copy">"For this lesson we'll use a randomly generated 256-bit key, displayed as 64 hexadecimal digits. Don't worry yet about how two people safely exchange a key; that problem will motivate the lessons that follow."</p>
         </section>
 
         <section class="workbench">
             <div class="workbench-heading">
                 <div>
-                    <p class="eyebrow">"Browser workbench"</p>
-                    <h2>"Derive a key, encrypt, then decrypt."</h2>
+                    <h2>"Encrypt, then decrypt with the same key."</h2>
                 </div>
-                <p>"Everything happens locally in your browser. The fields stay editable so you can change the passphrase, key, nonce, ciphertext, or plaintext and see what breaks."</p>
+                <p>"Everything happens locally in your browser. Generate a shared key, encrypt some plaintext, then use the same key to recover it."</p>
             </div>
 
-            <div class="primer-grid">
-                <div class="mini-workbench">
-                    <p class="exercise-number">"Step 1 · Passphrase → key"</p>
-                    <h3>"Derive a 256-bit key."</h3>
-                    <label for="backup-passphrase">"Passphrase"</label>
-                    <input
-                        id="backup-passphrase"
-                        prop:value=move || passphrase.get()
-                        on:input=move |ev| {
-                            set_passphrase.set(event_target_value(&ev));
-                            set_derive_feedback.set(String::new());
-                        }
-                    />
-                    <label for="backup-salt">"Salt (hex)"</label>
-                    <input
-                        id="backup-salt"
-                        prop:value=move || salt.get()
-                        on:input=move |ev| {
-                            set_salt.set(event_target_value(&ev));
-                            set_derive_feedback.set(String::new());
-                        }
-                    />
-                    <div class="hero-actions">
-                        <button
-                            type="button"
-                            class="button primary"
-                            on:click=move |_| {
-                                let passphrase = passphrase.get();
-                                let salt = salt.get();
-                                set_derive_feedback.set("Deriving…".to_owned());
-                                spawn_local(async move {
-                                    match crypto::derive_aes_key_hex(&passphrase, &salt).await {
-                                        Ok(key) => {
-                                            set_derived_key.set(key.clone());
-                                            set_encrypt_key.set(key.clone());
-                                            set_decrypt_key.set(key);
-                                            set_derive_feedback.set("Key derived. It has been copied into the encryption and decryption steps below.".to_owned());
-                                        }
-                                        Err(_) => set_derive_feedback.set("Couldn't derive a key. Check that the salt is valid hex.".to_owned()),
-                                    }
-                                });
-                            }
-                        >"Derive key"</button>
-                        <button
-                            type="button"
-                            class="button ghost"
-                            on:click=move |_| {
-                                match crypto::random_hex(16) {
-                                    Ok(value) => {
-                                        set_salt.set(value);
-                                        set_derived_key.set(String::new());
-                                        set_derive_feedback.set("Generated a new random salt. Derive the key again.".to_owned());
-                                    }
-                                    Err(_) => set_derive_feedback.set("Couldn't generate random bytes in this browser.".to_owned()),
+            <div class="mini-workbench">
+                <p class="exercise-number">"Shared key"</p>
+                <h3>"A random 256-bit secret."</h3>
+                <label for="shared-key">"Shared key (64 hex digits)"</label>
+                <input
+                    id="shared-key"
+                    maxlength="64"
+                    prop:value=move || shared_key.get()
+                    on:input=move |ev| {
+                        let value = event_target_value(&ev);
+                        set_shared_key.set(value.clone());
+                        set_decrypt_key.set(value);
+                        set_key_feedback.set(String::new());
+                    }
+                />
+                <div class="hero-actions">
+                    <button
+                        type="button"
+                        class="button primary"
+                        on:click=move |_| {
+                            match crypto::random_hex(32) {
+                                Ok(key) => {
+                                    set_shared_key.set(key.clone());
+                                    set_decrypt_key.set(key);
+                                    set_key_feedback.set("Generated a new random 256-bit key.".to_owned());
                                 }
+                                Err(_) => set_key_feedback.set("Couldn't generate random bytes in this browser.".to_owned()),
                             }
-                        >"New random salt"</button>
-                    </div>
-                    <div class="output" aria-live="polite">
-                        <span>"DERIVED KEY · 32 BYTES · 64 HEX DIGITS"</span>
-                        <code>{move || {
-                            let value = derived_key.get();
-                            if value.is_empty() { "—".to_owned() } else { value }
-                        }}</code>
-                    </div>
-                    <p class="quiz-feedback" aria-live="polite">{move || derive_feedback.get()}</p>
+                        }
+                    >"Generate new key"</button>
                 </div>
+                <p class="quiz-feedback" aria-live="polite">{move || key_feedback.get()}</p>
+            </div>
 
+            <div class="workbench-quiz">
+                <p class="exercise-number">"Step 1 · Plaintext → ciphertext"</p>
+                <h3>"Encrypt the backup with AES-GCM."</h3>
                 <div class="mini-workbench">
-                    <p class="exercise-number">"Step 2 · Plaintext → ciphertext"</p>
-                    <h3>"Encrypt with AES-GCM."</h3>
-                    <label for="encrypt-key">"Encryption key (64 hex digits)"</label>
-                    <input
-                        id="encrypt-key"
-                        maxlength="64"
-                        prop:value=move || encrypt_key.get()
-                        on:input=move |ev| set_encrypt_key.set(event_target_value(&ev))
-                    />
                     <label for="encrypt-plaintext">"Plaintext"</label>
                     <input
                         id="encrypt-plaintext"
@@ -150,7 +100,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
                             type="button"
                             class="button primary"
                             on:click=move |_| {
-                                let key = encrypt_key.get();
+                                let key = shared_key.get();
                                 let text = plaintext.get();
                                 set_encrypt_feedback.set("Encrypting…".to_owned());
                                 spawn_local(async move {
@@ -162,27 +112,14 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
                                             set_decrypt_nonce.set(new_nonce);
                                             set_decrypt_ciphertext.set(encrypted);
                                             set_decrypted_text.set(String::new());
-                                            set_encrypt_feedback.set("Encrypted. A fresh random nonce was generated and the values were copied into the decryption step.".to_owned());
+                                            set_decrypt_feedback.set(String::new());
+                                            set_encrypt_feedback.set("Encrypted. The nonce and ciphertext were copied into the decryption step below.".to_owned());
                                         }
-                                        Err(_) => set_encrypt_feedback.set("Encryption failed. Use a 32-byte key, shown as exactly 64 hex digits.".to_owned()),
+                                        Err(_) => set_encrypt_feedback.set("Encryption failed. The shared key must be exactly 64 hexadecimal digits.".to_owned()),
                                     }
                                 });
                             }
                         >"Encrypt"</button>
-                        <button
-                            type="button"
-                            class="button ghost"
-                            on:click=move |_| {
-                                match crypto::random_hex(32) {
-                                    Ok(key) => {
-                                        set_encrypt_key.set(key.clone());
-                                        set_decrypt_key.set(key);
-                                        set_encrypt_feedback.set("Generated a random 256-bit key. Encrypt with it when you're ready.".to_owned());
-                                    }
-                                    Err(_) => set_encrypt_feedback.set("Couldn't generate random bytes in this browser.".to_owned()),
-                                }
-                            }
-                        >"Use a random key"</button>
                     </div>
                     <div class="output">
                         <span>"NONCE · 12 BYTES"</span>
@@ -203,7 +140,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             </div>
 
             <div class="workbench-quiz">
-                <p class="exercise-number">"Step 3 · Ciphertext → plaintext"</p>
+                <p class="exercise-number">"Step 2 · Ciphertext → plaintext"</p>
                 <h3>"Decrypt with the same key."</h3>
                 <p>"Encryption copies the key, nonce, and ciphertext here for convenience. Edit any of them and see what happens."</p>
                 <div class="mini-workbench">
@@ -264,26 +201,22 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         </section>
 
         <section id="encryption-exercises" class="content-section planned-quiz">
-            <p class="eyebrow">"Exercises"</p>
-            <h2>"Use the workbench, then answer."</h2>
+            <h2>"Exercises"</h2>
+            <p class="section-copy">"Use the workbench above before answering."</p>
 
             <div class="workbench-quiz">
-                <p class="exercise-number">"1 of 2 · The passphrase is exact input too"</p>
-                <h3>"What happens if you add one trailing space to a passphrase?"</h3>
-                <p>"Keep the same salt. Derive a key from “backup key”, then derive again from “backup key ” with one trailing space. Compare the two keys."</p>
-                <div class="hero-actions">
-                    <button class="button ghost" type="button" on:click=move |_| set_passphrase.set("backup key".to_owned())>"Load “backup key”"</button>
-                    <button class="button ghost" type="button" on:click=move |_| set_passphrase.set("backup key ".to_owned())>"Load with trailing space"</button>
-                </div>
+                <p class="exercise-number">"1 of 2 · Round trip"</p>
+                <h3>"What happens when you decrypt with the same key?"</h3>
+                <p>"Encrypt some plaintext, then decrypt the resulting ciphertext without changing the key, nonce, or ciphertext."</p>
                 <div class="quiz-choice-row">
-                    <span>"Do they derive the same key?"</span>
-                    <button type="button" on:click=move |_| set_passphrase_exercise.set(Some(false))>"Same"</button>
-                    <button type="button" on:click=move |_| set_passphrase_exercise.set(Some(true))>"Different"</button>
+                    <span>"What should you recover?"</span>
+                    <button type="button" on:click=move |_| set_round_trip_exercise.set(Some(true))>"The original plaintext"</button>
+                    <button type="button" on:click=move |_| set_round_trip_exercise.set(Some(false))>"Something different"</button>
                 </div>
                 <p class="quiz-feedback" aria-live="polite">
-                    {move || match passphrase_exercise.get() {
-                        Some(true) => "Correct. The passphrase is input data too. One extra space changes the derived key completely.",
-                        Some(false) => "Try both passphrases with the same salt and compare the derived keys.",
+                    {move || match round_trip_exercise.get() {
+                        Some(true) => "Correct. With the same key and unchanged encrypted data, decryption recovers the original plaintext exactly.",
+                        Some(false) => "Try the full encrypt-and-decrypt round trip in the workbench above.",
                         None => "",
                     }}
                 </p>
@@ -309,13 +242,12 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         </section>
 
         <section class="lesson-explanation content-section">
-            <p class="eyebrow">"What did this prove?"</p>
-            <h2>"The secret key protects the contents—but now we have to manage the secret."</h2>
-            <p class="section-copy">"With AES-GCM, someone who doesn't know the key should not be able to read the encrypted backup. AES-GCM also detects accidental or deliberate changes to the encrypted data. But none of this tells us how two different people safely agree on a secret key in the first place."</p>
+            <h2>"What did this prove?"</h2>
+            <p class="section-copy">"With AES-GCM, someone who doesn't know the shared key should not be able to read the encrypted backup. AES-GCM also detects accidental or deliberate changes to the encrypted data. But now we have a new problem: if two people want to communicate, how do they safely establish or exchange that secret key?"</p>
             <div class="principles">
                 <article><span>"YES"</span><h3>"Confidentiality"</h3><p>"The ciphertext hides the plaintext from someone who doesn't have the key."</p></article>
                 <article><span>"YES"</span><h3>"Tamper detection"</h3><p>"AES-GCM authenticates the encrypted data, so altered ciphertext should fail to decrypt."</p></article>
-                <article><span>"NEXT"</span><h3>"Key distribution"</h3><p>"If two people want to communicate, they still need some safe way to establish or exchange that secret key."</p></article>
+                <article><span>"NEXT"</span><h3>"Key distribution"</h3><p>"Two people still need some safe way to establish or exchange the shared secret key."</p></article>
             </div>
         </section>
 

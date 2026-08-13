@@ -1,5 +1,7 @@
 mod crypto;
 
+use std::{cell::Cell, rc::Rc};
+
 use leptos::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 
@@ -43,18 +45,34 @@ fn HashLesson() -> impl IntoView {
     let (input, set_input) = signal(String::from("The quick brown fox jumps over the lazy dog"));
     let (digest, set_digest) = signal(String::from("Calculating…"));
     let (error, set_error) = signal(Option::<String>::None);
+    let request_id = Rc::new(Cell::new(0_u64));
 
-    Effect::new(move |_| {
-        let text = input.get();
-        spawn_local(async move {
-            match crypto::sha256_hex(&text).await {
-                Ok(value) => {
-                    set_error.set(None);
-                    set_digest.set(value);
+    Effect::new({
+        let request_id = Rc::clone(&request_id);
+        move |_| {
+            let text = input.get();
+            let id = request_id.get().wrapping_add(1);
+            request_id.set(id);
+            let request_id = Rc::clone(&request_id);
+
+            spawn_local(async move {
+                let result = crypto::sha256_hex(&text).await;
+
+                // WebCrypto operations may resolve out of order. Only the most
+                // recently started request is allowed to update the UI.
+                if request_id.get() != id {
+                    return;
                 }
-                Err(err) => set_error.set(Some(format!("{err:?}"))),
-            }
-        });
+
+                match result {
+                    Ok(value) => {
+                        set_error.set(None);
+                        set_digest.set(value);
+                    }
+                    Err(err) => set_error.set(Some(format!("{err:?}"))),
+                }
+            });
+        }
     });
 
     view! {

@@ -192,9 +192,17 @@ fn HomePage() -> impl IntoView {
 
 #[component]
 fn IntroLesson() -> impl IntoView {
-    let (byte_value, set_byte_value) = signal(173_u16);
+    let (decimal_value, set_decimal_value) = signal(173_u16);
+    let (hex_value, set_hex_value) = signal(String::from("AD"));
     let (hex_answer, set_hex_answer) = signal(String::new());
     let (hex_result, set_hex_result) = signal(Option::<bool>::None);
+    let (decimal_answer, set_decimal_answer) = signal(String::new());
+    let (decimal_result, set_decimal_result) = signal(Option::<bool>::None);
+    let (show_quiz_nudge, set_show_quiz_nudge) = signal(false);
+
+    let quiz_complete = Memo::new(move |_| {
+        hex_result.get() == Some(true) && decimal_result.get() == Some(true)
+    });
 
     view! {
         <LessonIntro
@@ -211,83 +219,194 @@ fn IntroLesson() -> impl IntoView {
                 <p class="section-copy">"That's 256 possible values. Cryptographic keys, hashes, ciphertext, and other data are ultimately made up of bytes, so you'll see these values throughout the lessons."</p>
             </div>
 
-            <div class="primer-grid">
-                <div>
-                    <p class="eyebrow">"HEXADECIMAL"</p>
-                    <h3>"A compact way to write byte values."</h3>
-                    <p>"The normal number system we use is decimal, or base 10. That means we have 10 possible digits: the numbers 0 through 9. Hexadecimal is base 16, so it needs six additional values. Beyond 0 through 9, it also includes A through F. A means 10, B means 11, and so on through F, which means 15. The letters may be uppercase or lowercase; A and a mean the same value."</p>
-                    <p>"The place values change with the base. In decimal, the number 54 has 5 in the tens position and 4 in the ones position, so its value is 5 × 10 + 4. In a two-digit hex number, the left digit is in the sixteens position and the right digit is in the ones position. So A5 means 10 × 16 + 5, which is 165 in decimal."</p>
-                    <p>"Because two hex digits can represent 16 × 16 = 256 different values, one byte always fits neatly into exactly two hex digits, from 00 through FF."</p>
-                    <table class="hex-table">
-                        <thead><tr><th>"Decimal"</th><th>"Hex"</th></tr></thead>
-                        <tbody>
-                            <tr><td>"0"</td><td><code>"00"</code></td></tr>
-                            <tr><td>"9"</td><td><code>"09"</code></td></tr>
-                            <tr><td>"10"</td><td><code>"0A"</code></td></tr>
-                            <tr><td>"15"</td><td><code>"0F"</code></td></tr>
-                            <tr><td>"16"</td><td><code>"10"</code></td></tr>
-                            <tr><td>"31"</td><td><code>"1F"</code></td></tr>
-                            <tr><td>"165"</td><td><code>"A5"</code></td></tr>
-                            <tr><td>"255"</td><td><code>"FF"</code></td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="section-heading">
+                <p class="eyebrow">"HEXADECIMAL"</p>
+                <h2>"A compact way to write byte values."</h2>
+                <p class="section-copy">"The normal number system we use is decimal, or base 10. That means we have 10 possible digits: the numbers 0 through 9. Hexadecimal is base 16, so it needs six additional values. Beyond 0 through 9, it also includes A through F. A means 10, B means 11, and so on through F, which means 15. The letters may be uppercase or lowercase; A and a mean the same value."</p>
+                <p class="section-copy">"In decimal, the number 54 means 5 tens and 4 ones, so its value is 5 × 10 + 4. Hex works the same way, except that in a two-digit hex number the left digit counts sixteens instead of tens. So A5 means 10 × 16 + 5, which is 165 in decimal."</p>
+                <p class="section-copy">"Because two hex digits can represent 16 × 16 = 256 different values, one byte always fits neatly into exactly two hex digits, from 00 through FF."</p>
+            </div>
 
-                <aside class="mini-workbench">
+            <table class="hex-table">
+                <thead><tr><th>"Decimal"</th><th>"Hex"</th></tr></thead>
+                <tbody>
+                    <tr><td>"0"</td><td><code>"00"</code></td></tr>
+                    <tr><td>"9"</td><td><code>"09"</code></td></tr>
+                    <tr><td>"10"</td><td><code>"0A"</code></td></tr>
+                    <tr><td>"15"</td><td><code>"0F"</code></td></tr>
+                    <tr><td>"16"</td><td><code>"10"</code></td></tr>
+                    <tr><td>"31"</td><td><code>"1F"</code></td></tr>
+                    <tr><td>"165"</td><td><code>"A5"</code></td></tr>
+                    <tr><td>"255"</td><td><code>"FF"</code></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="workbench">
+            <div class="workbench-heading">
+                <div>
                     <p class="eyebrow">"BYTE EXPLORER"</p>
-                    <label for="byte-value">"Decimal value (0–255)"</label>
+                    <h2>"Try converting in both directions."</h2>
+                </div>
+                <p>"Use the explorer freely. You'll use the same tool for the quick check below."</p>
+            </div>
+
+            <div class="primer-grid">
+                <div class="mini-workbench">
+                    <p class="eyebrow">"DECIMAL → HEX"</p>
+                    <label for="decimal-value">"Decimal value (0–255)"</label>
                     <input
-                        id="byte-value"
+                        id="decimal-value"
                         type="number"
                         min="0"
                         max="255"
-                        prop:value=move || byte_value.get().to_string()
+                        prop:value=move || decimal_value.get().to_string()
                         on:input=move |ev| {
                             if let Ok(value) = event_target_value(&ev).parse::<u16>() {
-                                set_byte_value.set(value.min(255));
+                                set_decimal_value.set(value.min(255));
                             }
                         }
                     />
                     <div class="byte-result">
                         <span>"HEX"</span>
-                        <code>{move || format!("{:02X}", byte_value.get())}</code>
+                        <code>{move || format!("{:02X}", decimal_value.get())}</code>
                     </div>
-                    <p class="microcopy">"Try 10, 15, 16, 31, 165, 173, and 255 and watch the two hex digits change."</p>
+                </div>
 
-                    <div class="tool-quiz">
-                        <p class="eyebrow">"QUICK CHECK"</p>
-                        <h3>"Use the explorer: what is decimal 200 in hex?"</h3>
-                        <div class="quiz-answer-row">
-                            <input
-                                aria-label="Hex value for decimal 200"
-                                placeholder="Your answer"
-                                prop:value=move || hex_answer.get()
-                                on:input=move |ev| {
-                                    set_hex_answer.set(event_target_value(&ev));
-                                    set_hex_result.set(None);
-                                }
-                            />
-                            <button
-                                type="button"
-                                on:click=move |_| {
-                                    set_hex_result.set(Some(hex_answer.get().trim().eq_ignore_ascii_case("C8")));
-                                }
-                            >"Check"</button>
-                        </div>
-                        <p class="quiz-feedback" aria-live="polite">
-                            {move || match hex_result.get() {
-                                Some(true) => "Exactly. C is 12, so C8 means 12 × 16 + 8 = 200.",
-                                Some(false) => "Not quite. Set the byte explorer to 200 and read the two hex digits it shows.",
-                                None => "",
-                            }}
-                        </p>
+                <div class="mini-workbench">
+                    <p class="eyebrow">"HEX → DECIMAL"</p>
+                    <label for="hex-value">"Hex value (00–FF)"</label>
+                    <input
+                        id="hex-value"
+                        maxlength="2"
+                        prop:value=move || hex_value.get()
+                        on:input=move |ev| {
+                            let value = event_target_value(&ev).to_ascii_uppercase();
+                            if value.len() <= 2 && value.chars().all(|c| c.is_ascii_hexdigit()) {
+                                set_hex_value.set(value);
+                            }
+                        }
+                    />
+                    <div class="byte-result">
+                        <span>"DECIMAL"</span>
+                        <code>{move || {
+                            u8::from_str_radix(hex_value.get().trim(), 16)
+                                .map(|value| value.to_string())
+                                .unwrap_or_else(|_| "—".to_owned())
+                        }}</code>
                     </div>
-                </aside>
+                </div>
             </div>
+            <p class="microcopy">"Try values such as 10, 15, 16, 31, A5, AD, and FF and watch how the two representations correspond."</p>
+        </section>
 
-            <A href="/hashes" attr:class="next-lesson">
-                <span>"NEXT"</span><b>"01 — Hashes →"</b>
-            </A>
+        <section id="intro-quiz" class="content-section planned-quiz">
+            <p class="eyebrow">"QUICK CHECK"</p>
+            <h2>"Use the explorer, then answer two questions."</h2>
+            <p class="section-copy">"The goal isn't to memorize hex arithmetic. It's to get comfortable reading the representation and using the tool when you need it."</p>
+
+            <div class="mini-workbench">
+                <div class="tool-quiz">
+                    <p class="eyebrow">"1 OF 2 · DECIMAL → HEX"</p>
+                    <h3>"What is decimal 200 in hex?"</h3>
+                    <div class="quiz-answer-row">
+                        <input
+                            aria-label="Hex value for decimal 200"
+                            placeholder="Your answer"
+                            prop:value=move || hex_answer.get()
+                            on:input=move |ev| {
+                                set_hex_answer.set(event_target_value(&ev));
+                                set_hex_result.set(None);
+                            }
+                        />
+                        <button
+                            type="button"
+                            on:click=move |_| {
+                                set_hex_result.set(Some(hex_answer.get().trim().eq_ignore_ascii_case("C8")));
+                            }
+                        >"Check"</button>
+                    </div>
+                    <p class="quiz-feedback" aria-live="polite">
+                        {move || match hex_result.get() {
+                            Some(true) => "Correct. C8 is decimal 200.",
+                            Some(false) => "Not quite. Put 200 into the decimal → hex explorer and check the result.",
+                            None => "",
+                        }}
+                    </p>
+                </div>
+
+                <div class="tool-quiz">
+                    <p class="eyebrow">"2 OF 2 · HEX → DECIMAL"</p>
+                    <h3>"What is hex 7B in decimal?"</h3>
+                    <div class="quiz-answer-row">
+                        <input
+                            aria-label="Decimal value for hex 7B"
+                            placeholder="Your answer"
+                            prop:value=move || decimal_answer.get()
+                            on:input=move |ev| {
+                                set_decimal_answer.set(event_target_value(&ev));
+                                set_decimal_result.set(None);
+                            }
+                        />
+                        <button
+                            type="button"
+                            on:click=move |_| {
+                                set_decimal_result.set(Some(decimal_answer.get().trim() == "123"));
+                            }
+                        >"Check"</button>
+                    </div>
+                    <p class="quiz-feedback" aria-live="polite">
+                        {move || match decimal_result.get() {
+                            Some(true) => "Correct. 7B is decimal 123.",
+                            Some(false) => "Not quite. Put 7B into the hex → decimal explorer and check the result.",
+                            None => "",
+                        }}
+                    </p>
+                </div>
+
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || {
+                        let completed = [hex_result.get(), decimal_result.get()]
+                            .into_iter()
+                            .filter(|result| *result == Some(true))
+                            .count();
+                        match completed {
+                            0 => "Two quick checks to go.".to_owned(),
+                            1 => "One down, one to go.".to_owned(),
+                            _ => "Nice — intro complete. You're ready for hashes.".to_owned(),
+                        }
+                    }}
+                </p>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <Show
+                when=move || quiz_complete.get()
+                fallback=move || view! {
+                    <div>
+                        <a
+                            href="#intro-quiz"
+                            class="next-lesson"
+                            on:click=move |_| set_show_quiz_nudge.set(true)
+                        >
+                            <span>"NEXT"</span>
+                            <b>"01 — Hashes → · Quick check not finished"</b>
+                        </a>
+                        <Show when=move || show_quiz_nudge.get()>
+                            <div class="precision-note">
+                                <strong>"Almost there."</strong>
+                                <p>"The quick check is meant to make the lesson stick. Finish the two questions above, or skip it if you'd rather keep moving."</p>
+                                <A href="/hashes">"Skip quiz and continue to Hashes →"</A>
+                            </div>
+                        </Show>
+                    </div>
+                }
+            >
+                <A href="/hashes" attr:class="next-lesson">
+                    <span>"NEXT"</span><b>"01 — Hashes →"</b>
+                </A>
+            </Show>
         </section>
     }
 }

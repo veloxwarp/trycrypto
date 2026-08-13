@@ -48,14 +48,21 @@ The static site is written to `dist/`.
 
 ## Hosting
 
-The intended host is Cloudflare Pages. The repository includes a GitHub Actions
-workflow that builds the Rust/WASM application and uses Wrangler to upload the
-prebuilt `dist/` directory.
+TryCrypto is hosted on Cloudflare Pages using its Git integration. Cloudflare
+builds both production and preview branches directly from GitHub; no Cloudflare
+API token is stored in this repository.
 
-Required GitHub Actions secrets:
+Pages configuration:
 
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_API_TOKEN` with Cloudflare Pages edit permission
+- Production branch: `master`
+- Build command: `bash build.sh`
+- Build output directory: `dist`
+- Root directory: repository root
+
+`build.sh` installs a minimal Rust toolchain and Trunk when they are not already
+available in the build environment, then runs `trunk build --release`.
+
+The canonical site is intended to be `https://trycrypto.snoyman.com`.
 
 ## History
 

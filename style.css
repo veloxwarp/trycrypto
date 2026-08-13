@@ -89,14 +89,13 @@ h3 { font-size: 24px; margin: 10px 0; }
 }
 
 .home-hero {
-  min-height: 680px;
-  padding: 92px max(7vw, 28px);
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(310px, 0.75fr);
-  gap: 8vw;
-  align-items: center;
+  min-height: 0;
+  padding: 88px max(7vw, 28px) 72px;
+  display: block;
 }
+.home-hero h1 { max-width: 1050px; }
 .home-hero h1 span { display: block; color: var(--teal); }
+.home-hero .lede { max-width: 780px; }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
 .button,
 .quiz-answer-row button,
@@ -147,6 +146,48 @@ h3 { font-size: 24px; margin: 10px 0; }
   color: var(--coral);
 }
 .principles p { color: var(--muted); line-height: 1.65; }
+
+.home-course {
+  padding-block: 46px 68px;
+  border-top: 1px solid var(--line);
+}
+.course-list {
+  max-width: 900px;
+  border-top: 1px solid var(--line);
+}
+.course-row {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  min-height: 62px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.course-row:hover strong,
+.course-row:hover .course-arrow { color: var(--teal); }
+.course-row-start { background: rgba(255, 250, 240, 0.45); }
+.course-number {
+  font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.08em;
+  color: var(--coral);
+}
+.course-row strong { font-size: 16px; }
+.start-badge,
+.course-arrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal);
+}
+.home-flow-section {
+  padding-block: 72px;
+  border-top: 1px solid var(--line);
+}
+.home-flow-section h2 {
+  max-width: 850px;
+  font-size: clamp(38px, 4.5vw, 58px);
+}
 
 .primer-section {
   border-top: 1px solid var(--line);
@@ -509,6 +550,17 @@ footer a { color: var(--ink); }
 
 @media (max-width: 700px) {
   .home-hero, .content-section, .workbench, .coming-section { padding-inline: 22px; }
+  .home-hero { padding-block: 48px 42px; }
+  .home-hero h1 { font-size: clamp(44px, 14vw, 64px); }
+  .home-course { padding-block: 34px 48px; }
+  .course-row {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 58px;
+  }
+  .course-row strong { font-size: 15px; }
+  .start-badge { max-width: 72px; text-align: right; }
+  .home-flow-section { padding-block: 54px; }
   .principles, .lesson-grid, .candidate-grid { grid-template-columns: 1fr; }
   .lesson-hero { grid-template-columns: 1fr; padding: 62px 22px; }
   .lesson-index { padding: 0; }

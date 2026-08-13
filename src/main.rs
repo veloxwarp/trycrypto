@@ -328,7 +328,12 @@ fn HashLesson() -> impl IntoView {
 }
 
 #[component]
-fn LessonIntro(number: &'static str, eyebrow: &'static str, title: &'static str, summary: &'static str) -> impl IntoView {
+fn LessonIntro(
+    number: &'static str,
+    eyebrow: &'static str,
+    title: &'static str,
+    summary: &'static str,
+) -> impl IntoView {
     view! {
         <section class="lesson-hero">
             <div class="lesson-index">{number}</div>

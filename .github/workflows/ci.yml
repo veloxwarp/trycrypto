@@ -6,7 +6,6 @@ on:
     branches:
       - master
       - main
-      - site-restructure
 
 permissions:
   contents: read
@@ -25,7 +24,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Format
-        run: cargo fmt --all
+        run: cargo fmt --all -- --check
 
       - name: Check
         run: cargo check
@@ -40,10 +39,3 @@ jobs:
 
       - name: Production build
         run: trunk build --release
-
-      - name: Upload formatted source
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: formatted-source
-          path: src

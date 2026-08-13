@@ -239,6 +239,11 @@ fn IntroLesson() -> impl IntoView {
                     <tr><td>"255"</td><td><code>"FF"</code></td></tr>
                 </tbody>
             </table>
+
+            <aside class="precision-note">
+                <strong>"One idea, many algorithms."</strong>
+                <p>"Hashing, encryption, and digital signatures each have multiple algorithms that perform the same general kind of job. In TryCrypto we'll use a few common modern examples—such as SHA-256 for hashing and AES-GCM for shared-secret encryption—so you can experiment with the concepts. You'll see other algorithm names in real software; the important thing here is understanding what kind of problem each tool solves and what it guarantees."</p>
+            </aside>
         </section>
 
         <section class="workbench">
@@ -549,15 +554,44 @@ fn HashLesson() -> impl IntoView {
 #[component]
 fn SymmetricEncryptionPage() -> impl IntoView {
     view! {
-        <ComingLesson
+        <LessonIntro
             number="02"
             title="Shared-secret encryption"
             eyebrow="ONE SECRET, TWO DIRECTIONS"
             summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
-            problem="You and I already share a secret. How can I send you data that anyone may intercept, but only we can read?"
-            challenge="Use the encryption workbench to determine which ciphertext was produced from a given message and secret, then change one input and observe what breaks."
-            points=&["Encrypt and decrypt with AES-GCM", "See why fresh nonces matter", "Learn why modern encryption also detects tampering"]
         />
+
+        <section class="motivation-section content-section">
+            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <h2>"You and I already share a secret. How can I send you data that anyone may intercept, but only we can read?"</h2>
+            <div class="prose-grid">
+                <p>"Shared-secret encryption gives both of us the same encryption key. I use it to turn readable data into ciphertext; you use the same key to recover the original data. Someone who sees only the ciphertext should not be able to learn the message without the key."</p>
+                <p>"The other person can also be future you. Imagine encrypting a backup before storing it in the cloud. You can protect it with a memorable password or passphrase today, then use the same passphrase to recover the backup years later."</p>
+            </div>
+            <aside class="precision-note">
+                <strong>"A password is not normally used directly as an AES key."</strong>
+                <p>"Human-chosen passwords are much easier to guess than random encryption keys. Instead, a password-based key derivation function takes the password or passphrase, a random salt, and deliberately expensive parameters and derives fixed-size key material for the encryption algorithm. The salt and parameters can be stored with the encrypted backup; the password is the part you must keep secret. We'll use the derived key with AES-GCM."</p>
+            </aside>
+        </section>
+
+        <section class="coming-section">
+            <div>
+                <p class="eyebrow">"LESSON IN DEVELOPMENT"</p>
+                <h2>"The workbench will make you solve the problem."</h2>
+                <p>"The interactive exercise will be built around both shared-key messaging and the password-protected backup scenario rather than around abstract definitions."</p>
+            </div>
+            <ol>
+                <li>"Encrypt and decrypt with AES-GCM"</li>
+                <li>"Derive encryption key material from a password or passphrase"</li>
+                <li>"See why fresh nonces and salts matter"</li>
+                <li>"Learn why modern encryption also detects tampering"</li>
+            </ol>
+        </section>
+        <section class="planned-quiz content-section">
+            <p class="eyebrow">"PLANNED CHALLENGE"</p>
+            <h2>"Use the tool, then answer."</h2>
+            <p class="section-copy">"Use the encryption workbench to derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then change one input and observe what breaks."</p>
+        </section>
     }
 }
 

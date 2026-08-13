@@ -1,6 +1,6 @@
+use crate::{LessonEnd, curve};
 use leptos::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::{LessonEnd, curve};
 
 #[component]
 pub fn VerificationLab() -> impl IntoView {

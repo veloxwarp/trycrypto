@@ -118,13 +118,18 @@ fn aes_params(nonce: &[u8]) -> Result<Object, JsValue> {
     Ok(params)
 }
 
-pub async fn seal_for(recipient_public: &CryptoKey, plaintext: &str) -> Result<SealedMessage, JsValue> {
+pub async fn seal_for(
+    recipient_public: &CryptoKey,
+    plaintext: &str,
+) -> Result<SealedMessage, JsValue> {
     let ephemeral = generate_x25519().await?;
     let key = shared_aes_key(&ephemeral.private, recipient_public).await?;
 
     let mut nonce = vec![0_u8; 12];
     let window = web_sys::window().ok_or_else(|| JsValue::from_str("window unavailable"))?;
-    window.crypto()?.get_random_values_with_u8_array(&mut nonce)?;
+    window
+        .crypto()?
+        .get_random_values_with_u8_array(&mut nonce)?;
     let params = aes_params(&nonce)?;
     let encrypted = subtle()?
         .encrypt_with_object_and_u8_array(&params, &key, plaintext.as_bytes())?
@@ -146,7 +151,8 @@ pub async fn open_from(
 ) -> Result<String, JsValue> {
     let key = shared_aes_key(recipient_private, ephemeral_public).await?;
     let nonce = hex::decode(nonce_hex).map_err(|_| JsValue::from_str("invalid nonce hex"))?;
-    let ciphertext = hex::decode(ciphertext_hex).map_err(|_| JsValue::from_str("invalid ciphertext hex"))?;
+    let ciphertext =
+        hex::decode(ciphertext_hex).map_err(|_| JsValue::from_str("invalid ciphertext hex"))?;
     let params = aes_params(&nonce)?;
     let decrypted = subtle()?
         .decrypt_with_object_and_u8_array(&params, &key, &ciphertext)?
@@ -175,10 +181,20 @@ pub async fn sign(private: &CryptoKey, message: &str) -> Result<String, JsValue>
     Ok(hex::encode(Uint8Array::new(&signature).to_vec()))
 }
 
-pub async fn verify(public: &CryptoKey, message: &str, signature_hex: &str) -> Result<bool, JsValue> {
-    let signature = hex::decode(signature_hex).map_err(|_| JsValue::from_str("invalid signature hex"))?;
+pub async fn verify(
+    public: &CryptoKey,
+    message: &str,
+    signature_hex: &str,
+) -> Result<bool, JsValue> {
+    let signature =
+        hex::decode(signature_hex).map_err(|_| JsValue::from_str("invalid signature hex"))?;
     subtle()?
-        .verify_with_str_and_u8_array_and_u8_array("Ed25519", public, &signature, message.as_bytes())?
+        .verify_with_str_and_u8_array_and_u8_array(
+            "Ed25519",
+            public,
+            &signature,
+            message.as_bytes(),
+        )?
         .await?
         .as_bool()
         .ok_or_else(|| JsValue::from_str("verify returned a non-boolean"))

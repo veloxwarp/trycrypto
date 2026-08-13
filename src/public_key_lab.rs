@@ -17,7 +17,9 @@ pub fn PublicKeyLab() -> impl IntoView {
     let (a_ok, set_a_ok) = signal(false);
     let (b_failed, set_b_failed) = signal(false);
     let (recipient_answer, set_recipient_answer) = signal(Option::<bool>::None);
-    let complete = Memo::new(move |_| encrypted_seen.get() && a_ok.get() && b_failed.get() && recipient_answer.get() == Some(true));
+    let complete = Memo::new(move |_| {
+        encrypted_seen.get() && a_ok.get() && b_failed.get() && recipient_answer.get() == Some(true)
+    });
 
     view! {
         <section class="workbench">

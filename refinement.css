@@ -1,0 +1,160 @@
+/* Final layout refinements: favor conventional vertical reading flow. */
+
+/* Section labels are useful metadata, but they should not compete with headings. */
+.content-section > .eyebrow,
+.section-heading > .eyebrow,
+.workbench-heading .eyebrow,
+.coming-section .eyebrow,
+.lesson-hero .eyebrow {
+  display: none;
+}
+
+/* Keep the lesson number as the one compact piece of orientation metadata. */
+.lesson-hero {
+  display: block;
+  min-height: 0;
+  max-width: none;
+}
+.lesson-index {
+  padding: 0;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+.lesson-hero h1 {
+  max-width: 900px;
+}
+.lesson-hero .lede {
+  margin-top: 20px;
+}
+
+/* Ordinary section headings should read like ordinary section headings. */
+.content-section h2,
+.workbench h2,
+.coming-section h2 {
+  max-width: 820px;
+  font-size: clamp(30px, 3.2vw, 42px);
+  line-height: 1.12;
+  margin-bottom: 20px;
+}
+
+/* Explanatory prose is a reading flow, not a dashboard. */
+.prose-grid {
+  display: block;
+  max-width: 800px;
+  margin-top: 26px;
+}
+.prose-grid p {
+  margin: 0 0 20px;
+}
+
+.workbench-heading {
+  display: block;
+  max-width: 850px;
+}
+.workbench-heading > p {
+  max-width: 760px;
+  margin-top: 14px;
+}
+
+.coming-section {
+  display: block;
+}
+.coming-section > div,
+.coming-section ol {
+  max-width: 800px;
+}
+.coming-section ol {
+  margin-top: 30px;
+}
+
+/* The encryption lesson uses this class for workbench steps; keep those linear too. */
+.primer-grid {
+  display: block !important;
+}
+.primer-grid > * + * {
+  margin-top: 28px;
+}
+
+/* Summary guarantees read more naturally as a short vertical list. */
+.principles {
+  grid-template-columns: 1fr;
+  max-width: 820px;
+}
+.principles article {
+  padding: 24px 28px;
+}
+
+/* Keep deliberate interactive pairings horizontal when space allows. */
+.byte-converter {
+  max-width: 760px;
+}
+
+/* Clear validation for the paired byte converter. */
+.field-error {
+  margin: 8px 0 0;
+  color: #9b2f24;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+input[aria-invalid="true"] {
+  border-color: #9b2f24;
+  outline-color: #9b2f24;
+}
+
+/* Kit signup belongs in the normal page flow rather than an aside/card. */
+.kit-signup-host {
+  max-width: 720px;
+  margin-top: 30px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.kit-signup-host > p {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0 0 18px;
+}
+.kit-signup-host .formkit-form {
+  margin: 0 !important;
+  max-width: 620px !important;
+}
+.kit-signup-host .formkit-fields {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+.kit-signup-host .formkit-field {
+  flex: 1 1 260px !important;
+  margin: 0 !important;
+}
+.kit-signup-host input[type="email"],
+.kit-signup-host input[type="text"] {
+  min-height: 46px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  background: var(--white) !important;
+  color: var(--ink) !important;
+  font: inherit !important;
+}
+.kit-signup-host .formkit-submit,
+.kit-signup-host button[type="submit"] {
+  min-height: 46px !important;
+  border: 1px solid var(--ink) !important;
+  border-radius: 0 !important;
+  background: var(--ink) !important;
+  color: white !important;
+  font: 700 13px Manrope, Inter, system-ui, sans-serif !important;
+}
+
+@media (max-width: 700px) {
+  .kit-signup-host .formkit-fields {
+    display: block !important;
+  }
+  .kit-signup-host .formkit-field,
+  .kit-signup-host .formkit-submit,
+  .kit-signup-host button[type="submit"] {
+    width: 100% !important;
+    margin: 0 0 10px !important;
+  }
+}

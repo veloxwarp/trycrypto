@@ -82,6 +82,7 @@ fn App() -> impl IntoView {
                     <Route path=path!("public-key-encryption") view=PublicKeyEncryptionPage />
                     <Route path=path!("signatures") view=SignaturesPage />
                     <Route path=path!("verification") view=VerificationPage />
+                    <Route path=path!("complete") view=CompletionPage />
                 </Routes>
             </main>
             <SiteFooter />
@@ -162,7 +163,7 @@ fn HomePage() -> impl IntoView {
             <div class="text-links">
                 <a href="https://www.snoyman.com/" target="_blank" rel="noopener noreferrer">"About Michael ↗"</a>
                 <a href="https://github.com/snoyberg" target="_blank" rel="noopener noreferrer">"GitHub ↗"</a>
-                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog & subscribe ↗"</a>
+                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Blog ↗"</a>
             </div>
         </section>
 
@@ -170,9 +171,7 @@ fn HomePage() -> impl IntoView {
             <p class="eyebrow">"WHERE THIS GETS INTERESTING"</p>
             <h2>"What can a signature really tell us?"</h2>
             <p class="section-copy">"Knowing how to verify a signature is one thing. Deciding what that signature means is much harder. I'm working on a new protocol built heavily around cryptographic evidence and those questions of identity, provenance, and trust. I'll share more when it's ready."</p>
-            <div class="text-links">
-                <a href="https://www.snoyman.com/blog/" target="_blank" rel="noopener noreferrer">"Follow along on my blog →"</a>
-            </div>
+            <p class="microcopy">"I'm setting up a dedicated mailing list for people interested in that work. The sign-up form will live here rather than sending product-interest traffic to my general blog."</p>
         </section>
     }
 }
@@ -186,7 +185,7 @@ fn IntroLesson() -> impl IntoView {
     let (decimal_answer, set_decimal_answer) = signal(String::new());
     let (decimal_result, set_decimal_result) = signal(Option::<bool>::None);
 
-    let quiz_complete =
+    let exercises_complete =
         Memo::new(move |_| hex_result.get() == Some(true) && decimal_result.get() == Some(true));
 
     view! {
@@ -238,7 +237,7 @@ fn IntroLesson() -> impl IntoView {
                     <p class="eyebrow">"BYTE EXPLORER"</p>
                     <h2>"Try converting in both directions."</h2>
                 </div>
-                <p>"Use the explorer freely. You'll use the same tool for the quick check below."</p>
+                <p>"Use the explorer freely. You'll use the same tool for the exercises below."</p>
             </div>
 
             <div class="primer-grid">
@@ -290,8 +289,8 @@ fn IntroLesson() -> impl IntoView {
             <p class="microcopy">"Try values such as 10, 15, 16, 31, A5, AD, and FF and watch how the two representations correspond."</p>
         </section>
 
-        <section id="intro-quiz" class="content-section planned-quiz">
-            <p class="eyebrow">"QUICK CHECK"</p>
+        <section id="intro-exercises" class="content-section planned-quiz">
+            <p class="eyebrow">"EXERCISES"</p>
             <h2>"Use the explorer, then answer two questions."</h2>
             <p class="section-copy">"The goal isn't to memorize hex arithmetic. It's to get comfortable reading the representation and using the tool when you need it."</p>
 
@@ -361,7 +360,7 @@ fn IntroLesson() -> impl IntoView {
                             .filter(|result| *result == Some(true))
                             .count();
                         match completed {
-                            0 => "Two quick checks to go.".to_owned(),
+                            0 => "Two exercises to go.".to_owned(),
                             1 => "One down, one to go.".to_owned(),
                             _ => "Nice — intro complete. You're ready for hashes.".to_owned(),
                         }
@@ -370,26 +369,12 @@ fn IntroLesson() -> impl IntoView {
             </div>
         </section>
 
-        <section class="content-section">
-            <Show
-                when=move || quiz_complete.get()
-                fallback=|| view! {
-                    <div class="precision-note">
-                        <p class="eyebrow">"QUICK CHECK NOT COMPLETED"</p>
-                        <strong>"Want to test it before moving on?"</strong>
-                        <p>"The quick check is optional, but using the explorer once helps make the representation familiar."</p>
-                        <div class="hero-actions">
-                            <a class="button primary" href="#intro-quiz">"Go to quick check ↑"</a>
-                            <A href="/hashes" attr:class="button ghost">"Skip and continue →"</A>
-                        </div>
-                    </div>
-                }
-            >
-                <A href="/hashes" attr:class="next-lesson">
-                    <span>"NEXT"</span><b>"01 — Hashes →"</b>
-                </A>
-            </Show>
-        </section>
+        <LessonEnd
+            exercises_complete
+            exercises_id="intro-exercises"
+            next_href="/hashes"
+            next_label="01 — Hashes →"
+        />
     }
 }
 
@@ -404,6 +389,7 @@ fn HashLesson() -> impl IntoView {
     let (error, set_error) = signal(Option::<String>::None);
     let (challenge_result, set_challenge_result) = signal(Option::<bool>::None);
     let request_id = Rc::new(Cell::new(0_u64));
+    let exercises_complete = Memo::new(move |_| challenge_result.get() == Some(true));
 
     Effect::new({
         let request_id = Rc::clone(&request_id);
@@ -473,9 +459,12 @@ fn HashLesson() -> impl IntoView {
                     }}</code>
                 </div>
             </div>
+        </section>
 
-            <div id="hash-quiz" class="workbench-quiz">
-                <p class="eyebrow">"USE THE WORKBENCH"</p>
+        <section id="hash-exercises" class="content-section planned-quiz">
+            <p class="eyebrow">"EXERCISES"</p>
+            <h2>"Use the workbench, then answer."</h2>
+            <div class="workbench-quiz">
                 <h3>"Which message matches this hash?"</h3>
                 <code class="target-hash">{CHALLENGE_HASH}</code>
                 <p>"Load each candidate into the workbench above and compare its SHA-256 result with the target."</p>
@@ -521,26 +510,14 @@ fn HashLesson() -> impl IntoView {
                 <h3>"Proof of work"</h3>
                 <p>"Hashes are also useful when we want a task that is expensive to perform but cheap to verify. Proof-of-work systems repeatedly vary data and hash it until they find a result meeting a difficult condition. Checking the winning hash is easy; finding it required lots of trial and error."</p>
             </aside>
-
-            <Show
-                when=move || challenge_result.get() == Some(true)
-                fallback=|| view! {
-                    <div class="precision-note">
-                        <p class="eyebrow">"QUICK CHECK NOT COMPLETED"</p>
-                        <strong>"Want to test your understanding first?"</strong>
-                        <p>"The quick check is optional, but it gives you a chance to verify a hash match yourself before moving on."</p>
-                        <div class="hero-actions">
-                            <a class="button primary" href="#hash-quiz">"Go to quick check ↑"</a>
-                            <A href="/symmetric-encryption" attr:class="button ghost">"Skip and continue →"</A>
-                        </div>
-                    </div>
-                }
-            >
-                <A href="/symmetric-encryption" attr:class="next-lesson">
-                    <span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b>
-                </A>
-            </Show>
         </section>
+
+        <LessonEnd
+            exercises_complete
+            exercises_id="hash-exercises"
+            next_href="/symmetric-encryption"
+            next_label="02 — Shared-secret encryption →"
+        />
     }
 }
 
@@ -569,9 +546,9 @@ fn SymmetricEncryptionPage() -> impl IntoView {
 
         <section class="coming-section">
             <div>
-                <p class="eyebrow">"LESSON IN DEVELOPMENT"</p>
-                <h2>"The workbench will make you solve the problem."</h2>
-                <p>"The interactive exercise will be built around both shared-key messaging and the password-protected backup scenario rather than around abstract definitions."</p>
+                <p class="eyebrow">"BROWSER WORKBENCH"</p>
+                <h2>"Work in progress."</h2>
+                <p>"The workbench will be built around both shared-key messaging and the password-protected backup scenario rather than around abstract definitions."</p>
             </div>
             <ol>
                 <li>"Encrypt and decrypt with AES-GCM"</li>
@@ -580,11 +557,14 @@ fn SymmetricEncryptionPage() -> impl IntoView {
                 <li>"Learn why modern encryption also detects tampering"</li>
             </ol>
         </section>
+
         <section class="planned-quiz content-section">
-            <p class="eyebrow">"PLANNED CHALLENGE"</p>
-            <h2>"Use the tool, then answer."</h2>
-            <p class="section-copy">"Use the encryption workbench to derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then change one input and observe what breaks."</p>
+            <p class="eyebrow">"EXERCISES"</p>
+            <h2>"Use the workbench, then answer."</h2>
+            <p class="section-copy">"When the workbench is finished, the exercises will have you derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then you'll change one input and observe what breaks."</p>
         </section>
+
+        <LessonContinue next_href="/keypairs" next_label="03 — Public/private keypairs →" />
     }
 }
 
@@ -599,6 +579,8 @@ fn KeypairsPage() -> impl IntoView {
             problem="Shared-secret encryption is useful—but first we somehow had to share a secret. Can I publish something useful without publishing the secret that gives me control?"
             challenge="Generate a keypair in the workbench, then identify which operations still work when you keep only the public half and which require the private half."
             points=&["Generate a keypair in the browser", "Compare public and private material", "Understand what possession of each key permits"]
+            next_href="/public-key-encryption"
+            next_label="04 — Public-key encryption →"
         />
     }
 }
@@ -614,6 +596,8 @@ fn PublicKeyEncryptionPage() -> impl IntoView {
             problem="You need to send me confidential data, but we've never exchanged a shared secret. Can you encrypt something that only I can open?"
             challenge="Use two generated keypairs to encrypt for one recipient, then prove with the workbench that the other private key cannot decrypt the ciphertext."
             points=&["Encrypt using a recipient's public key", "Decrypt using the corresponding private key", "Contrast this with shared-secret encryption"]
+            next_href="/signatures"
+            next_label="05 — Digital signatures →"
         />
     }
 }
@@ -629,6 +613,8 @@ fn SignaturesPage() -> impl IntoView {
             problem="I publish a software release and you download it from somewhere else. How can you check that these exact bytes are the ones the holder of my private key approved?"
             challenge="Use the workbench to verify a signature, then change one character in the message and watch the same signature fail."
             points=&["Sign exact data with a private key", "Verify with the public key", "See how hashes and signatures fit together"]
+            next_href="/verification"
+            next_label="06 — Verification & identity →"
         />
     }
 }
@@ -644,7 +630,38 @@ fn VerificationPage() -> impl IntoView {
             problem="A signature verifies successfully against a public key. Does that prove Michael Snoyman signed the message? Not by itself."
             challenge="Use the verification workbench to establish exactly what a signature proves, then separate those facts from claims about who controls the key and whether the signed statement is true."
             points=&["Separate keys from identities", "Distinguish valid signatures from true statements", "Identify the trust assumptions outside the cryptography"]
+            next_href="/complete"
+            next_label="Finish TryCrypto →"
         />
+    }
+}
+
+#[component]
+fn CompletionPage() -> impl IntoView {
+    view! {
+        <LessonIntro
+            number="DONE"
+            eyebrow="YOU'VE REACHED THE END"
+            title="Now ask better questions."
+            summary="Cryptography gives precise tools and precise guarantees. The interesting part is knowing where those guarantees stop."
+        />
+
+        <section class="content-section">
+            <p class="eyebrow">"TRYCRYPTO COMPLETE"</p>
+            <h2>"From bytes to signatures—and then beyond the signatures."</h2>
+            <p class="section-copy">"You've followed the path from representation and hashing through encryption, keypairs, signatures, and the harder questions of verification and identity. Revisit any lesson whenever you want to experiment with the tools again."</p>
+            <div class="hero-actions">
+                <A href="/" attr:class="button primary">"Back to the course"</A>
+                <A href="/hashes" attr:class="button ghost">"Revisit hashes"</A>
+            </div>
+        </section>
+
+        <section class="home-flow-section content-section">
+            <p class="eyebrow">"WHERE THIS LEADS"</p>
+            <h2>"What can a signature really tell us?"</h2>
+            <p class="section-copy">"That's the question behind a new protocol I'm working on around cryptographic evidence, identity, provenance, and trust. I'm setting up a dedicated mailing list for people who want to hear when there's something real to show."</p>
+            <p class="microcopy">"Product-interest sign-up coming shortly."</p>
+        </section>
     }
 }
 
@@ -664,6 +681,48 @@ fn LessonIntro(
 }
 
 #[component]
+fn LessonEnd(
+    exercises_complete: Memo<bool>,
+    exercises_id: &'static str,
+    next_href: &'static str,
+    next_label: &'static str,
+) -> impl IntoView {
+    view! {
+        <section class="content-section">
+            <Show
+                when=move || exercises_complete.get()
+                fallback=move || view! {
+                    <div class="precision-note">
+                        <p class="eyebrow">"EXERCISES NOT COMPLETED"</p>
+                        <strong>"Want to try the exercises before moving on?"</strong>
+                        <p>"They're optional, but they're where you use the lesson's tool for yourself instead of only reading about it."</p>
+                        <div class="hero-actions">
+                            <a class="button primary" href=format!("#{exercises_id}")>"Go to exercises ↑"</a>
+                            <A href=next_href attr:class="button ghost">"Skip exercises and continue →"</A>
+                        </div>
+                    </div>
+                }
+            >
+                <A href=next_href attr:class="next-lesson">
+                    <span>"NEXT"</span><b>{next_label}</b>
+                </A>
+            </Show>
+        </section>
+    }
+}
+
+#[component]
+fn LessonContinue(next_href: &'static str, next_label: &'static str) -> impl IntoView {
+    view! {
+        <section class="content-section">
+            <A href=next_href attr:class="next-lesson">
+                <span>"NEXT"</span><b>{next_label}</b>
+            </A>
+        </section>
+    }
+}
+
+#[component]
 fn ComingLesson(
     number: &'static str,
     title: &'static str,
@@ -672,6 +731,8 @@ fn ComingLesson(
     problem: &'static str,
     challenge: &'static str,
     points: &'static [&'static str],
+    next_href: &'static str,
+    next_label: &'static str,
 ) -> impl IntoView {
     view! {
         <LessonIntro number eyebrow title summary />
@@ -681,17 +742,18 @@ fn ComingLesson(
         </section>
         <section class="coming-section">
             <div>
-                <p class="eyebrow">"LESSON IN DEVELOPMENT"</p>
-                <h2>"The workbench will make you solve the problem."</h2>
-                <p>"The interactive exercise will be built around the scenario above rather than around abstract definitions."</p>
+                <p class="eyebrow">"BROWSER WORKBENCH"</p>
+                <h2>"Work in progress."</h2>
+                <p>"The interactive tool will be built around the scenario above rather than around abstract definitions."</p>
             </div>
             <ol>{points.iter().map(|point| view! { <li>{*point}</li> }).collect_view()}</ol>
         </section>
         <section class="planned-quiz content-section">
-            <p class="eyebrow">"PLANNED CHALLENGE"</p>
-            <h2>"Use the tool, then answer."</h2>
+            <p class="eyebrow">"EXERCISES"</p>
+            <h2>"Use the workbench, then answer."</h2>
             <p class="section-copy">{challenge}</p>
         </section>
+        <LessonContinue next_href next_label />
     }
 }
 

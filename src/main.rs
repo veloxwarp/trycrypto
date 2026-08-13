@@ -27,14 +27,14 @@ const LESSONS: [Lesson; 6] = [
         short: "Hashes",
         title: "Hashes",
         href: "/hashes",
-        description: "Check that large data arrived unchanged without sending the whole thing back.",
+        description: "Verify that a backup or other data is still exactly what you expect.",
     },
     Lesson {
         number: "02",
         short: "Encryption",
         title: "Shared-secret encryption",
         href: "/symmetric-encryption",
-        description: "Protect data so that only someone who shares your secret can read it.",
+        description: "Protect a backup or message so that only someone with the secret can read it.",
     },
     Lesson {
         number: "03",
@@ -390,13 +390,17 @@ fn HashLesson() -> impl IntoView {
     const CHALLENGE_A: &str = "Meet me at 10:30 by the north entrance.";
     const CHALLENGE_B: &str = "Meet me at 10:30 by the south entrance.";
     const CHALLENGE_HASH: &str = "6c1e614182df466a0629118845873531184affe88aeb240ed834301a82908f47";
+    const EXACT_INPUT: &str = "Backup finished successfully.";
 
     let (input, set_input) = signal(String::from("The quick brown fox jumps over the lazy dog"));
     let (digest, set_digest) = signal(String::from("Calculating…"));
     let (error, set_error) = signal(Option::<String>::None);
     let (challenge_result, set_challenge_result) = signal(Option::<bool>::None);
+    let (exact_result, set_exact_result) = signal(Option::<bool>::None);
     let request_id = Rc::new(Cell::new(0_u64));
-    let exercises_complete = Memo::new(move |_| challenge_result.get() == Some(true));
+    let exercises_complete = Memo::new(move |_| {
+        challenge_result.get() == Some(true) && exact_result.get() == Some(true)
+    });
 
     Effect::new({
         let request_id = Rc::clone(&request_id);
@@ -425,17 +429,17 @@ fn HashLesson() -> impl IntoView {
     view! {
         <LessonIntro
             number="01"
-            eyebrow="Check that data arrived intact"
+            eyebrow="Check that data stayed intact"
             title="Hashes"
             summary="A hash gives us a small fingerprint for data, even when the data itself is enormous."
         />
 
         <section class="motivation-section content-section">
             <p class="eyebrow">"Why would I want this?"</p>
-            <h2>"I sent you a 10 GB file. Did you get exactly what I sent?"</h2>
+            <h2>"I made a 10 GB backup. How do I know it hasn't been corrupted?"</h2>
             <div class="prose-grid">
-                <p>"One solution is for you to send the entire 10 GB file back to me so I can compare the two copies. That works, but it's ridiculous: verifying the transfer costs another 10 GB transfer."</p>
-                <p>"Instead, we can both hash our copies. SHA-256 turns any amount of data into a 32-byte result, commonly displayed as 64 hex digits. We compare those tiny results instead of retransmitting the file. If they match, we have extremely strong evidence that our copies contain exactly the same bytes."</p>
+                <p>"Before I put the backup away, I can calculate its SHA-256 hash and save that tiny result somewhere I trust. Months later, when I copy or restore the backup, I hash it again. If the two hashes match, I have extremely strong evidence that the backup still contains exactly the same data."</p>
+                <p>"The same idea works when someone else sends you a large file. Instead of comparing two giant files byte by byte, you compare their small hashes—as long as you received the expected hash from a source you trust."</p>
             </div>
             <aside class="precision-note">
                 <strong>"Could two different files ever have the same SHA-256 hash?"</strong>
@@ -446,7 +450,7 @@ fn HashLesson() -> impl IntoView {
         <section class="workbench">
             <div class="workbench-heading">
                 <div><p class="eyebrow">"Browser workbench"</p><h2>"Try SHA-256 yourself."</h2></div>
-                <p>"Change the input—even by one character—and compare the 64 hex digits below. Everything happens locally in your browser."</p>
+                <p>"Change the input—even by one character, space, or newline—and compare the 64 hex digits below. Everything happens locally in your browser."</p>
             </div>
             <div class="hash-tool">
                 <label for="hash-input">
@@ -471,7 +475,9 @@ fn HashLesson() -> impl IntoView {
         <section id="hash-exercises" class="content-section planned-quiz">
             <p class="eyebrow">"Exercises"</p>
             <h2>"Use the workbench, then answer."</h2>
+
             <div class="workbench-quiz">
+                <p class="exercise-number">"1 of 2 · Match exact data"</p>
                 <h3>"Which message matches this hash?"</h3>
                 <code class="target-hash">{CHALLENGE_HASH}</code>
                 <p>"Load each candidate into the workbench above and compare its SHA-256 result with the target."</p>
@@ -500,23 +506,40 @@ fn HashLesson() -> impl IntoView {
                     }}
                 </p>
             </div>
+
+            <div class="workbench-quiz">
+                <p class="exercise-number">"2 of 2 · Exact means exact"</p>
+                <h3>"Does invisible whitespace change the hash?"</h3>
+                <p>"Load the clean text and note its hash. Then add a trailing space or newline. The text may look almost identical, but compare the hash carefully."</p>
+                <div class="hero-actions">
+                    <button class="button ghost" type="button" on:click=move |_| set_input.set(EXACT_INPUT.to_owned())>"Load clean text"</button>
+                    <button class="button ghost" type="button" on:click=move |_| set_input.set(format!("{EXACT_INPUT} "))>"Add trailing space"</button>
+                    <button class="button ghost" type="button" on:click=move |_| set_input.set(format!("{EXACT_INPUT}\n"))>"Add trailing newline"</button>
+                </div>
+                <div class="quiz-choice-row">
+                    <span>"Are these the same contents to SHA-256?"</span>
+                    <button type="button" on:click=move |_| set_exact_result.set(Some(false))>"Same"</button>
+                    <button type="button" on:click=move |_| set_exact_result.set(Some(true))>"Different"</button>
+                </div>
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || match exact_result.get() {
+                        Some(true) => "Right. A trailing space or newline is part of the input, so the contents are different. Cryptographic operations depend on having exactly the same input, even when a difference is hard to see.",
+                        Some(false) => "Try the buttons and watch the digest. Whitespace at the end is still part of the input.",
+                        None => "",
+                    }}
+                </p>
+            </div>
         </section>
 
         <section class="lesson-explanation content-section">
             <p class="eyebrow">"What did this prove?"</p>
-            <h2>"The hash checks the bytes—not their source or their truth."</h2>
-            <p class="section-copy">"If I give you a trusted SHA-256 digest and your file produces the same digest, that's excellent evidence that you have the exact file I meant. But the hash itself cannot tell you who created the file or who gave you the digest."</p>
+            <h2>"The hash checks the data—not its source or its truth."</h2>
+            <p class="section-copy">"If you saved a trusted SHA-256 digest when you created your backup and the restored file produces the same digest, that's excellent evidence that you got back the exact data you started with. But the hash itself cannot tell you who created some data or whether what it says is true."</p>
             <div class="principles">
                 <article><span>"YES"</span><h3>"Integrity"</h3><p>"A hash lets us cheaply compare large amounts of data and detect accidental or deliberate changes."</p></article>
                 <article><span>"NO"</span><h3>"No authenticated source"</h3><p>"If an attacker can replace both a file and the hash you compare it against, they can simply provide the correct hash of their replacement."</p></article>
                 <article><span>"NO"</span><h3>"No claim of truth"</h3><p>"False information hashes just as reliably as true information."</p></article>
             </div>
-
-            <aside class="side-note">
-                <p class="eyebrow">"One more place hashes show up"</p>
-                <h3>"Proof of work"</h3>
-                <p>"Hashes are also useful when we want a task that is expensive to perform but cheap to verify. Proof-of-work systems repeatedly vary data and hash it until they find a result meeting a difficult condition. Checking the winning hash is easy; finding it required lots of trial and error."</p>
-            </aside>
         </section>
 
         <LessonEnd
@@ -530,53 +553,323 @@ fn HashLesson() -> impl IntoView {
 
 #[component]
 fn SymmetricEncryptionPage() -> impl IntoView {
-    let (exercise_done, set_exercise_done) = signal(false);
-    let exercises_complete = Memo::new(move |_| exercise_done.get());
+    let initial_salt = crypto::random_hex(16)
+        .unwrap_or_else(|_| "00112233445566778899aabbccddeeff".to_owned());
+
+    let (passphrase, set_passphrase) = signal(String::from("my backup passphrase"));
+    let (salt, set_salt) = signal(initial_salt);
+    let (derived_key, set_derived_key) = signal(String::new());
+    let (derive_feedback, set_derive_feedback) = signal(String::new());
+
+    let (encrypt_key, set_encrypt_key) = signal(String::new());
+    let (plaintext, set_plaintext) = signal(String::from("My important backup contents"));
+    let (nonce, set_nonce) = signal(String::new());
+    let (ciphertext, set_ciphertext) = signal(String::new());
+    let (encrypt_feedback, set_encrypt_feedback) = signal(String::new());
+
+    let (decrypt_key, set_decrypt_key) = signal(String::new());
+    let (decrypt_nonce, set_decrypt_nonce) = signal(String::new());
+    let (decrypt_ciphertext, set_decrypt_ciphertext) = signal(String::new());
+    let (decrypted_text, set_decrypted_text) = signal(String::new());
+    let (decrypt_feedback, set_decrypt_feedback) = signal(String::new());
+
+    let (passphrase_exercise, set_passphrase_exercise) = signal(Option::<bool>::None);
+    let (wrong_key_exercise, set_wrong_key_exercise) = signal(Option::<bool>::None);
+    let exercises_complete = Memo::new(move |_| {
+        passphrase_exercise.get() == Some(true) && wrong_key_exercise.get() == Some(true)
+    });
 
     view! {
         <LessonIntro
             number="02"
             title="Shared-secret encryption"
-            eyebrow="One secret, two directions"
-            summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
+            eyebrow="Keep the backup private"
+            summary="Encryption turns readable data into ciphertext that only someone with the secret key can recover."
         />
 
         <section class="motivation-section content-section">
             <p class="eyebrow">"Why would I want this?"</p>
-            <h2>"You and I already share a secret. How can I send you data that anyone may intercept, but only we can read?"</h2>
+            <h2>"I want to store my backup somewhere else. How do I stop the storage provider from reading it?"</h2>
             <div class="prose-grid">
-                <p>"Shared-secret encryption gives both of us the same encryption key. I use it to turn readable data into ciphertext; you use the same key to recover the original data. Someone who sees only the ciphertext should not be able to learn the message without the key."</p>
-                <p>"The other person can also be future you. Imagine encrypting a backup before storing it in the cloud. You can protect it with a memorable password or passphrase today, then use the same passphrase to recover the backup years later."</p>
+                <p>"Before uploading the backup, I can encrypt it with a secret key. The storage provider sees only ciphertext. Later, I use that same key to decrypt the backup and recover the original data. This is called shared-secret or symmetric encryption: the same secret is used in both directions."</p>
+                <p>"A random encryption key is great for cryptography but annoying to remember. One practical option is to start with a password or passphrase and run it through a key-derivation function. That gives us the fixed-size key that AES-GCM needs. Present-you can encrypt the backup; future-you can derive the same key and decrypt it."</p>
             </div>
             <aside class="precision-note">
-                <strong>"A password is not normally used directly as an AES key."</strong>
-                <p>"Human-chosen passwords are much easier to guess than random encryption keys. Instead, a password-based key derivation function takes the password or passphrase, a random salt, and deliberately expensive parameters and derives fixed-size key material for the encryption algorithm. The salt and parameters can be stored with the encrypted backup; the password is the part you must keep secret. We'll use the derived key with AES-GCM."</p>
+                <strong>"Passphrase + salt → key."</strong>
+                <p>"The salt isn't secret; you keep it with the encrypted backup. Using the same passphrase and the same salt derives the same key. In this lesson the browser uses PBKDF2 with SHA-256 to demonstrate that step, then uses the resulting 256-bit key with AES-GCM."</p>
             </aside>
         </section>
 
-        <section class="coming-section">
-            <div>
-                <p class="eyebrow">"Browser workbench"</p>
-                <h2>"Work in progress."</h2>
-                <p>"The workbench will be built around both shared-key messaging and the password-protected backup scenario rather than around abstract definitions."</p>
+        <section class="workbench">
+            <div class="workbench-heading">
+                <div>
+                    <p class="eyebrow">"Browser workbench"</p>
+                    <h2>"Derive a key, encrypt, then decrypt."</h2>
+                </div>
+                <p>"Everything happens locally in your browser. The fields stay editable so you can change the passphrase, key, nonce, ciphertext, or plaintext and see what breaks."</p>
             </div>
-            <ol>
-                <li>"Encrypt and decrypt with AES-GCM"</li>
-                <li>"Derive encryption key material from a password or passphrase"</li>
-                <li>"See why fresh nonces and salts matter"</li>
-                <li>"Learn why modern encryption also detects tampering"</li>
-            </ol>
+
+            <div class="primer-grid">
+                <div class="mini-workbench">
+                    <p class="exercise-number">"Step 1 · Passphrase → key"</p>
+                    <h3>"Derive a 256-bit key."</h3>
+                    <label for="backup-passphrase">"Passphrase"</label>
+                    <input
+                        id="backup-passphrase"
+                        prop:value=move || passphrase.get()
+                        on:input=move |ev| {
+                            set_passphrase.set(event_target_value(&ev));
+                            set_derive_feedback.set(String::new());
+                        }
+                    />
+                    <label for="backup-salt">"Salt (hex)"</label>
+                    <input
+                        id="backup-salt"
+                        prop:value=move || salt.get()
+                        on:input=move |ev| {
+                            set_salt.set(event_target_value(&ev));
+                            set_derive_feedback.set(String::new());
+                        }
+                    />
+                    <div class="hero-actions">
+                        <button
+                            type="button"
+                            class="button primary"
+                            on:click=move |_| {
+                                let passphrase = passphrase.get();
+                                let salt = salt.get();
+                                set_derive_feedback.set("Deriving…".to_owned());
+                                spawn_local(async move {
+                                    match crypto::derive_aes_key_hex(&passphrase, &salt).await {
+                                        Ok(key) => {
+                                            set_derived_key.set(key.clone());
+                                            set_encrypt_key.set(key.clone());
+                                            set_decrypt_key.set(key);
+                                            set_derive_feedback.set("Key derived. It has been copied into the encryption and decryption steps below.".to_owned());
+                                        }
+                                        Err(_) => set_derive_feedback.set("Couldn't derive a key. Check that the salt is valid hex.".to_owned()),
+                                    }
+                                });
+                            }
+                        >"Derive key"</button>
+                        <button
+                            type="button"
+                            class="button ghost"
+                            on:click=move |_| {
+                                match crypto::random_hex(16) {
+                                    Ok(value) => {
+                                        set_salt.set(value);
+                                        set_derived_key.set(String::new());
+                                        set_derive_feedback.set("Generated a new random salt. Derive the key again.".to_owned());
+                                    }
+                                    Err(_) => set_derive_feedback.set("Couldn't generate random bytes in this browser.".to_owned()),
+                                }
+                            }
+                        >"New random salt"</button>
+                    </div>
+                    <div class="output" aria-live="polite">
+                        <span>"DERIVED KEY · 32 BYTES · 64 HEX DIGITS"</span>
+                        <code>{move || {
+                            let value = derived_key.get();
+                            if value.is_empty() { "—".to_owned() } else { value }
+                        }}</code>
+                    </div>
+                    <p class="quiz-feedback" aria-live="polite">{move || derive_feedback.get()}</p>
+                </div>
+
+                <div class="mini-workbench">
+                    <p class="exercise-number">"Step 2 · Plaintext → ciphertext"</p>
+                    <h3>"Encrypt with AES-GCM."</h3>
+                    <label for="encrypt-key">"Encryption key (64 hex digits)"</label>
+                    <input
+                        id="encrypt-key"
+                        maxlength="64"
+                        prop:value=move || encrypt_key.get()
+                        on:input=move |ev| set_encrypt_key.set(event_target_value(&ev))
+                    />
+                    <label for="encrypt-plaintext">"Plaintext"</label>
+                    <input
+                        id="encrypt-plaintext"
+                        prop:value=move || plaintext.get()
+                        on:input=move |ev| set_plaintext.set(event_target_value(&ev))
+                    />
+                    <div class="hero-actions">
+                        <button
+                            type="button"
+                            class="button primary"
+                            on:click=move |_| {
+                                let key = encrypt_key.get();
+                                let text = plaintext.get();
+                                set_encrypt_feedback.set("Encrypting…".to_owned());
+                                spawn_local(async move {
+                                    match crypto::aes_gcm_encrypt(&key, &text).await {
+                                        Ok((new_nonce, encrypted)) => {
+                                            set_nonce.set(new_nonce.clone());
+                                            set_ciphertext.set(encrypted.clone());
+                                            set_decrypt_key.set(key);
+                                            set_decrypt_nonce.set(new_nonce);
+                                            set_decrypt_ciphertext.set(encrypted);
+                                            set_decrypted_text.set(String::new());
+                                            set_encrypt_feedback.set("Encrypted. A fresh random nonce was generated and the values were copied into the decryption step.".to_owned());
+                                        }
+                                        Err(_) => set_encrypt_feedback.set("Encryption failed. Use a 32-byte key, shown as exactly 64 hex digits.".to_owned()),
+                                    }
+                                });
+                            }
+                        >"Encrypt"</button>
+                        <button
+                            type="button"
+                            class="button ghost"
+                            on:click=move |_| {
+                                match crypto::random_hex(32) {
+                                    Ok(key) => {
+                                        set_encrypt_key.set(key.clone());
+                                        set_decrypt_key.set(key);
+                                        set_encrypt_feedback.set("Generated a random 256-bit key. Encrypt with it when you're ready.".to_owned());
+                                    }
+                                    Err(_) => set_encrypt_feedback.set("Couldn't generate random bytes in this browser.".to_owned()),
+                                }
+                            }
+                        >"Use a random key"</button>
+                    </div>
+                    <div class="output">
+                        <span>"NONCE · 12 BYTES"</span>
+                        <code>{move || {
+                            let value = nonce.get();
+                            if value.is_empty() { "—".to_owned() } else { value }
+                        }}</code>
+                    </div>
+                    <div class="output">
+                        <span>"CIPHERTEXT + AUTHENTICATION TAG"</span>
+                        <code>{move || {
+                            let value = ciphertext.get();
+                            if value.is_empty() { "—".to_owned() } else { value }
+                        }}</code>
+                    </div>
+                    <p class="quiz-feedback" aria-live="polite">{move || encrypt_feedback.get()}</p>
+                </div>
+            </div>
+
+            <div class="workbench-quiz">
+                <p class="exercise-number">"Step 3 · Ciphertext → plaintext"</p>
+                <h3>"Decrypt with the same key."</h3>
+                <p>"Encryption copies the key, nonce, and ciphertext here for convenience. Edit any of them and see what happens."</p>
+                <div class="mini-workbench">
+                    <label for="decrypt-key">"Decryption key (64 hex digits)"</label>
+                    <input
+                        id="decrypt-key"
+                        maxlength="64"
+                        prop:value=move || decrypt_key.get()
+                        on:input=move |ev| set_decrypt_key.set(event_target_value(&ev))
+                    />
+                    <label for="decrypt-nonce">"Nonce (24 hex digits)"</label>
+                    <input
+                        id="decrypt-nonce"
+                        maxlength="24"
+                        prop:value=move || decrypt_nonce.get()
+                        on:input=move |ev| set_decrypt_nonce.set(event_target_value(&ev))
+                    />
+                    <label for="decrypt-ciphertext">"Ciphertext"</label>
+                    <input
+                        id="decrypt-ciphertext"
+                        prop:value=move || decrypt_ciphertext.get()
+                        on:input=move |ev| set_decrypt_ciphertext.set(event_target_value(&ev))
+                    />
+                    <div class="hero-actions">
+                        <button
+                            type="button"
+                            class="button primary"
+                            on:click=move |_| {
+                                let key = decrypt_key.get();
+                                let nonce = decrypt_nonce.get();
+                                let ciphertext = decrypt_ciphertext.get();
+                                set_decrypt_feedback.set("Decrypting…".to_owned());
+                                spawn_local(async move {
+                                    match crypto::aes_gcm_decrypt(&key, &nonce, &ciphertext).await {
+                                        Ok(text) => {
+                                            set_decrypted_text.set(text);
+                                            set_decrypt_feedback.set("Decryption succeeded.".to_owned());
+                                        }
+                                        Err(_) => {
+                                            set_decrypted_text.set(String::new());
+                                            set_decrypt_feedback.set("Decryption failed. The key, nonce, and ciphertext must all match exactly.".to_owned());
+                                        }
+                                    }
+                                });
+                            }
+                        >"Decrypt"</button>
+                    </div>
+                    <div class="output" aria-live="polite">
+                        <span>"RECOVERED PLAINTEXT"</span>
+                        <code>{move || {
+                            let value = decrypted_text.get();
+                            if value.is_empty() { "—".to_owned() } else { value }
+                        }}</code>
+                    </div>
+                    <p class="quiz-feedback" aria-live="polite">{move || decrypt_feedback.get()}</p>
+                </div>
+            </div>
         </section>
 
-        <ReviewExercise
-            description="The final exercises will have you derive a key from a passphrase, decrypt a protected backup, and determine which passphrase produces the valid plaintext. Then you'll change one input and observe what breaks."
-            exercise_done
-            set_exercise_done
-        />
+        <section id="encryption-exercises" class="content-section planned-quiz">
+            <p class="eyebrow">"Exercises"</p>
+            <h2>"Use the workbench, then answer."</h2>
+
+            <div class="workbench-quiz">
+                <p class="exercise-number">"1 of 2 · The passphrase is exact input too"</p>
+                <h3>"What happens if you add one trailing space to a passphrase?"</h3>
+                <p>"Keep the same salt. Derive a key from “backup key”, then derive again from “backup key ” with one trailing space. Compare the two keys."</p>
+                <div class="hero-actions">
+                    <button class="button ghost" type="button" on:click=move |_| set_passphrase.set("backup key".to_owned())>"Load “backup key”"</button>
+                    <button class="button ghost" type="button" on:click=move |_| set_passphrase.set("backup key ".to_owned())>"Load with trailing space"</button>
+                </div>
+                <div class="quiz-choice-row">
+                    <span>"Do they derive the same key?"</span>
+                    <button type="button" on:click=move |_| set_passphrase_exercise.set(Some(false))>"Same"</button>
+                    <button type="button" on:click=move |_| set_passphrase_exercise.set(Some(true))>"Different"</button>
+                </div>
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || match passphrase_exercise.get() {
+                        Some(true) => "Correct. The passphrase is input data too. One extra space changes the derived key completely.",
+                        Some(false) => "Try both passphrases with the same salt and compare the derived keys.",
+                        None => "",
+                    }}
+                </p>
+            </div>
+
+            <div class="workbench-quiz">
+                <p class="exercise-number">"2 of 2 · The key must match"</p>
+                <h3>"What if the decryption key is almost right?"</h3>
+                <p>"Encrypt some plaintext. In the decryption step, change a single hex digit of the key and click Decrypt."</p>
+                <div class="quiz-choice-row">
+                    <span>"What should happen?"</span>
+                    <button type="button" on:click=move |_| set_wrong_key_exercise.set(Some(false))>"It still decrypts"</button>
+                    <button type="button" on:click=move |_| set_wrong_key_exercise.set(Some(true))>"Decryption fails"</button>
+                </div>
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || match wrong_key_exercise.get() {
+                        Some(true) => "Exactly. There is no “close enough” key. AES-GCM also authenticates the encrypted data, so a wrong key—or altered ciphertext—causes decryption to fail rather than returning slightly-wrong plaintext.",
+                        Some(false) => "Try changing one hex digit in the decryption key. AES-GCM should reject it.",
+                        None => "",
+                    }}
+                </p>
+            </div>
+        </section>
+
+        <section class="lesson-explanation content-section">
+            <p class="eyebrow">"What did this prove?"</p>
+            <h2>"The secret key protects the contents—but now we have to manage the secret."</h2>
+            <p class="section-copy">"With AES-GCM, someone who doesn't know the key should not be able to read the encrypted backup. AES-GCM also detects accidental or deliberate changes to the encrypted data. But none of this tells us how two different people safely agree on a secret key in the first place."</p>
+            <div class="principles">
+                <article><span>"YES"</span><h3>"Confidentiality"</h3><p>"The ciphertext hides the plaintext from someone who doesn't have the key."</p></article>
+                <article><span>"YES"</span><h3>"Tamper detection"</h3><p>"AES-GCM authenticates the encrypted data, so altered ciphertext should fail to decrypt."</p></article>
+                <article><span>"NEXT"</span><h3>"Key distribution"</h3><p>"If two people want to communicate, they still need some safe way to establish or exchange that secret key."</p></article>
+            </div>
+        </section>
 
         <LessonEnd
             exercises_complete
-            exercises_id="lesson-exercises"
+            exercises_id="encryption-exercises"
             next_href="/keypairs"
             next_label="Continue to 03 — Public/private keypairs →"
         />

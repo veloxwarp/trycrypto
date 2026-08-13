@@ -30,11 +30,15 @@ if ! command -v trunk >/dev/null 2>&1 \
 
   curl --proto '=https' --tlsv1.2 -fsSL "$base_url/$asset" -o "$tmpdir/$asset"
   curl --proto '=https' --tlsv1.2 -fsSL "$base_url/$asset.sha256" -o "$tmpdir/$asset.sha256"
-  (
-    cd "$tmpdir"
-    sha256sum --check "$asset.sha256"
-    tar -xzf "$asset"
-  )
+
+  expected_sha256="$(tr -d '[:space:]' < "$tmpdir/$asset.sha256")"
+  actual_sha256="$(sha256sum "$tmpdir/$asset" | awk '{print $1}')"
+  if [[ "$actual_sha256" != "$expected_sha256" ]]; then
+    echo "Trunk checksum mismatch: expected $expected_sha256, got $actual_sha256" >&2
+    exit 1
+  fi
+
+  tar -xzf "$tmpdir/$asset" -C "$tmpdir"
   install -m 0755 "$tmpdir/trunk" "$HOME/.cargo/bin/trunk"
   trap - EXIT
   rm -rf "$tmpdir"

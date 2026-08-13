@@ -262,10 +262,8 @@ fn IntroLesson() -> impl IntoView {
                                 set_decimal_value.set(value.clone());
                                 if value.is_empty() {
                                     set_hex_value.set(String::new());
-                                } else if let Ok(number) = value.parse::<u16>() {
-                                    if number <= 255 {
-                                        set_hex_value.set(format!("{number:02X}"));
-                                    }
+                                } else if let Ok(number) = value.parse::<u8>() {
+                                    set_hex_value.set(format!("{number:02X}"));
                                 }
                             }
                         }

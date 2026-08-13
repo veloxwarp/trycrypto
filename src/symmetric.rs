@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::{crypto, LessonEnd, LessonIntro};
+use crate::{LessonEnd, LessonIntro, crypto};
 
 #[component]
 pub fn SymmetricEncryptionLesson() -> impl IntoView {

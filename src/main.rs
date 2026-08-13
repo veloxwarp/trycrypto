@@ -27,42 +27,42 @@ const LESSONS: [Lesson; 6] = [
         short: "Hashes",
         title: "Hashes",
         href: "/hashes",
-        description: "Turn data into a stable fingerprint and see what changes when the input changes.",
+        description: "Check that large data arrived unchanged without sending the whole thing back.",
     },
     Lesson {
         number: "02",
         short: "Encryption",
         title: "Shared-secret encryption",
         href: "/symmetric-encryption",
-        description: "Use one secret to encrypt and decrypt data with authenticated encryption.",
+        description: "Protect data so that only someone who shares your secret can read it.",
     },
     Lesson {
         number: "03",
         short: "Keypairs",
         title: "Public/private keypairs",
         href: "/keypairs",
-        description: "Create a keypair and learn which half can be shared and which must stay private.",
+        description: "Separate something safe to publish from something only you must keep secret.",
     },
     Lesson {
         number: "04",
         short: "Public key",
         title: "Public-key encryption",
         href: "/public-key-encryption",
-        description: "Encrypt something for another person without ever possessing their private key.",
+        description: "Send confidential data to someone even when you never shared a secret first.",
     },
     Lesson {
         number: "05",
         short: "Signatures",
         title: "Digital signatures",
         href: "/signatures",
-        description: "Sign exact data with a private key and verify it with the corresponding public key.",
+        description: "Let anyone check that exact data was approved by the holder of a private key.",
     },
     Lesson {
         number: "06",
         short: "Verification",
         title: "Verification & identity",
         href: "/verification",
-        description: "Ask the important question: what did a valid cryptographic result actually prove?",
+        description: "Separate what cryptography proves about keys and bytes from what we infer about people.",
     },
 ];
 
@@ -127,7 +127,7 @@ fn IntroPage() -> impl IntoView {
                 </p>
                 <div class="hero-actions">
                     <A href="/hashes" attr:class="button primary">"Start with hashes →"</A>
-                    <a class="button ghost" href="#lessons">"See the lessons"</a>
+                    <a class="button ghost" href="#primer">"First: bytes & hex"</a>
                 </div>
             </div>
             <aside class="definition-card">
@@ -150,10 +150,12 @@ fn IntroPage() -> impl IntoView {
             </div>
         </section>
 
+        <BytePrimer />
+
         <section id="lessons" class="content-section lessons-section">
             <p class="eyebrow">"THE COURSE"</p>
-            <h2>"Six small lessons. One idea at a time."</h2>
-            <p class="section-copy">"Each lesson introduces a primitive from the user's point of view, lets you experiment with it, and makes its guarantees explicit."</p>
+            <h2>"Six problems. Six cryptographic tools."</h2>
+            <p class="section-copy">"Each lesson begins with a problem worth solving, gives you a workbench to solve it, and then asks you to use that workbench to prove that you understood the result."</p>
             <div class="lesson-grid">
                 {LESSONS
                     .iter()
@@ -202,10 +204,103 @@ fn IntroPage() -> impl IntoView {
 }
 
 #[component]
+fn BytePrimer() -> impl IntoView {
+    let (byte_value, set_byte_value) = signal(173_u16);
+    let (hex_answer, set_hex_answer) = signal(String::new());
+    let (hex_result, set_hex_result) = signal(Option::<bool>::None);
+
+    view! {
+        <section id="primer" class="content-section primer-section">
+            <div class="section-heading">
+                <p class="eyebrow">"TWO SMALL BASICS"</p>
+                <h2>"Bytes and hexadecimal."</h2>
+                <p class="section-copy">"Cryptographic tools work with bytes. A byte is simply a number from 0 through 255. You'll also see those byte values written in hexadecimal—usually shortened to hex."</p>
+            </div>
+
+            <div class="primer-grid">
+                <div>
+                    <h3>"Why hex?"</h3>
+                    <p>"Decimal uses ten digits: 0 through 9. Hex uses sixteen digits: the numbers 0 through 9, then the letters A through F. The letters are sometimes uppercase and sometimes lowercase; A and a mean the same value."</p>
+                    <p>"Because there are 16 possible hex digits, two hex digits can represent 16 × 16 = 256 values—exactly the 256 values in one byte. So one byte always fits neatly in two hex digits, from 00 through FF."</p>
+                    <table class="hex-table">
+                        <thead><tr><th>"Decimal"</th><th>"Hex"</th><th>"Why"</th></tr></thead>
+                        <tbody>
+                            <tr><td>"0"</td><td><code>"00"</code></td><td>"0 × 16 + 0"</td></tr>
+                            <tr><td>"9"</td><td><code>"09"</code></td><td>"0 × 16 + 9"</td></tr>
+                            <tr><td>"10"</td><td><code>"0A"</code></td><td>"A means 10"</td></tr>
+                            <tr><td>"15"</td><td><code>"0F"</code></td><td>"F means 15"</td></tr>
+                            <tr><td>"16"</td><td><code>"10"</code></td><td>"1 × 16 + 0"</td></tr>
+                            <tr><td>"31"</td><td><code>"1F"</code></td><td>"1 × 16 + 15"</td></tr>
+                            <tr><td>"255"</td><td><code>"FF"</code></td><td>"15 × 16 + 15"</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <aside class="mini-workbench">
+                    <p class="eyebrow">"BYTE EXPLORER"</p>
+                    <label for="byte-value">"Decimal value (0–255)"</label>
+                    <input
+                        id="byte-value"
+                        type="number"
+                        min="0"
+                        max="255"
+                        prop:value=move || byte_value.get().to_string()
+                        on:input=move |ev| {
+                            if let Ok(value) = event_target_value(&ev).parse::<u16>() {
+                                set_byte_value.set(value.min(255));
+                            }
+                        }
+                    />
+                    <div class="byte-result">
+                        <span>"HEX"</span>
+                        <code>{move || format!("{:02X}", byte_value.get())}</code>
+                    </div>
+                    <p class="microcopy">"Try 10, 15, 16, 31, 173, and 255 and watch the two hex digits change."</p>
+
+                    <div class="tool-quiz">
+                        <p class="eyebrow">"QUICK CHECK"</p>
+                        <h3>"Use the explorer: what is decimal 200 in hex?"</h3>
+                        <div class="quiz-answer-row">
+                            <input
+                                aria-label="Hex value for decimal 200"
+                                placeholder="e.g. C8"
+                                prop:value=move || hex_answer.get()
+                                on:input=move |ev| {
+                                    set_hex_answer.set(event_target_value(&ev));
+                                    set_hex_result.set(None);
+                                }
+                            />
+                            <button
+                                type="button"
+                                on:click=move |_| {
+                                    set_hex_result.set(Some(hex_answer.get().trim().eq_ignore_ascii_case("C8")));
+                                }
+                            >"Check"</button>
+                        </div>
+                        <p class="quiz-feedback" aria-live="polite">
+                            {move || match hex_result.get() {
+                                Some(true) => "Exactly. C is 12, so C8 means 12 × 16 + 8 = 200.",
+                                Some(false) => "Not quite. Set the byte explorer to 200 and read the two hex digits it shows.",
+                                None => "",
+                            }}
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    }
+}
+
+#[component]
 fn HashLesson() -> impl IntoView {
+    const CHALLENGE_A: &str = "Meet me at 10:30 by the north entrance.";
+    const CHALLENGE_B: &str = "Meet me at 10:30 by the south entrance.";
+    const CHALLENGE_HASH: &str = "6c1e614182df466a0629118845873531184affe88aeb240ed834301a82908f47";
+
     let (input, set_input) = signal(String::from("The quick brown fox jumps over the lazy dog"));
     let (digest, set_digest) = signal(String::from("Calculating…"));
     let (error, set_error) = signal(Option::<String>::None);
+    let (challenge_result, set_challenge_result) = signal(Option::<bool>::None);
     let request_id = Rc::new(Cell::new(0_u64));
 
     Effect::new({
@@ -235,14 +330,28 @@ fn HashLesson() -> impl IntoView {
     view! {
         <LessonIntro
             number="01"
-            eyebrow="A FINGERPRINT FOR DATA"
+            eyebrow="CHECK THAT DATA ARRIVED INTACT"
             title="Hashes"
-            summary="A cryptographic hash turns arbitrary data into a fixed-size value. The same input gives the same hash; change even one character and the output changes dramatically."
+            summary="A hash gives us a small fingerprint for data, even when the data itself is enormous."
         />
+
+        <section class="motivation-section content-section">
+            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <h2>"I sent you a 10 GB file. Did you get exactly what I sent?"</h2>
+            <div class="prose-grid">
+                <p>"One solution is for you to send the entire 10 GB file back to me so I can compare the two copies. That works, but it's ridiculous: verifying the transfer costs another 10 GB transfer."</p>
+                <p>"Instead, we can both hash our copies. SHA-256 turns any amount of data into a 32-byte result, commonly displayed as 64 hex digits. We compare those tiny results instead of retransmitting the file. If they match, we have extremely strong evidence that our copies contain exactly the same bytes."</p>
+            </div>
+            <aside class="precision-note">
+                <strong>"Could two different files ever have the same SHA-256 hash?"</strong>
+                <p>"Yes, mathematically they must: there are more possible files than possible 256-bit hashes. But SHA-256 is designed so that deliberately finding a useful match requires an infeasible amount of work. In practice, we treat that as impossible for this kind of integrity check."</p>
+            </aside>
+        </section>
+
         <section class="workbench">
             <div class="workbench-heading">
                 <div><p class="eyebrow">"BROWSER WORKBENCH"</p><h2>"Try SHA-256 yourself."</h2></div>
-                <p>"Everything happens locally in your browser. The text you enter here is not sent to a server."</p>
+                <p>"Change the input—even by one character—and compare the 64 hex digits below. Everything happens locally in your browser."</p>
             </div>
             <div class="hash-tool">
                 <label for="hash-input">
@@ -255,23 +364,62 @@ fn HashLesson() -> impl IntoView {
                 </label>
                 <div class="arrow">"↓"</div>
                 <div class="output" aria-live="polite">
-                    <span>"SHA-256"</span>
+                    <span>"SHA-256 · 32 BYTES · 64 HEX DIGITS"</span>
                     <code>{move || match error.get() {
                         Some(err) => format!("WebCrypto error: {err}"),
                         None => digest.get(),
                     }}</code>
                 </div>
             </div>
+
+            <div class="workbench-quiz">
+                <p class="eyebrow">"USE THE WORKBENCH"</p>
+                <h3>"Which message matches this hash?"</h3>
+                <code class="target-hash">{CHALLENGE_HASH}</code>
+                <p>"Load each candidate into the workbench above and compare its SHA-256 result with the target."</p>
+                <div class="candidate-grid">
+                    <div>
+                        <span>"A"</span>
+                        <p>{CHALLENGE_A}</p>
+                        <button type="button" on:click=move |_| set_input.set(CHALLENGE_A.to_owned())>"Load A into workbench"</button>
+                    </div>
+                    <div>
+                        <span>"B"</span>
+                        <p>{CHALLENGE_B}</p>
+                        <button type="button" on:click=move |_| set_input.set(CHALLENGE_B.to_owned())>"Load B into workbench"</button>
+                    </div>
+                </div>
+                <div class="quiz-choice-row">
+                    <span>"Which one matches?"</span>
+                    <button type="button" on:click=move |_| set_challenge_result.set(Some(true))>"A"</button>
+                    <button type="button" on:click=move |_| set_challenge_result.set(Some(false))>"B"</button>
+                </div>
+                <p class="quiz-feedback" aria-live="polite">
+                    {move || match challenge_result.get() {
+                        Some(true) => "Exactly. A hashes to the target value. Changing only “north” to “south” produces a completely different digest.",
+                        Some(false) => "Not quite. Load both messages into the workbench and compare each SHA-256 result with the target hash.",
+                        None => "",
+                    }}
+                </p>
+            </div>
         </section>
+
         <section class="lesson-explanation content-section">
             <p class="eyebrow">"WHAT DID THIS PROVE?"</p>
-            <h2>"A hash proves less than people often assume."</h2>
-            <p class="section-copy">"The digest gives us a stable fingerprint for these exact bytes. If two people independently hash identical data with SHA-256, they get the same result. Change the data and the digest changes."</p>
+            <h2>"The hash checks the bytes—not their source or their truth."</h2>
+            <p class="section-copy">"If I give you a trusted SHA-256 digest and your file produces the same digest, that's excellent evidence that you have the exact file I meant. But the hash itself cannot tell you who created the file or who gave you the digest."</p>
             <div class="principles">
-                <article><span>"YES"</span><h3>"Stable identity for bytes"</h3><p>"A hash is useful for integrity checks, content addressing, and as an input to signatures."</p></article>
-                <article><span>"NO"</span><h3>"No author identity"</h3><p>"The hash alone tells you nothing about who created, published, or endorsed the data."</p></article>
+                <article><span>"YES"</span><h3>"Integrity"</h3><p>"A hash lets us cheaply compare large amounts of data and detect accidental or deliberate changes."</p></article>
+                <article><span>"NO"</span><h3>"No authenticated source"</h3><p>"If an attacker can replace both a file and the hash you compare it against, they can simply provide the correct hash of their replacement."</p></article>
                 <article><span>"NO"</span><h3>"No claim of truth"</h3><p>"False information hashes just as reliably as true information."</p></article>
             </div>
+
+            <aside class="side-note">
+                <p class="eyebrow">"ONE MORE PLACE HASHES SHOW UP"</p>
+                <h3>"Proof of work"</h3>
+                <p>"Hashes are also useful when we want a task that is expensive to perform but cheap to verify. Proof-of-work systems repeatedly vary data and hash it until they find a result meeting a difficult condition. Checking the winning hash is easy; finding it required lots of trial and error."</p>
+            </aside>
+
             <A href="/symmetric-encryption" attr:class="next-lesson">
                 <span>"NEXT"</span><b>"02 — Shared-secret encryption →"</b>
             </A>
@@ -287,7 +435,9 @@ fn SymmetricEncryptionPage() -> impl IntoView {
             title="Shared-secret encryption"
             eyebrow="ONE SECRET, TWO DIRECTIONS"
             summary="Encryption lets us transform readable data into ciphertext that only someone with the right secret can recover."
-            points=&["Encrypt and decrypt with AES-GCM", "See the role of a nonce", "Learn why authenticated encryption matters"]
+            problem="You and I already share a secret. How can I send you data that anyone may intercept, but only we can read?"
+            challenge="Use the encryption workbench to determine which ciphertext was produced from a given message and secret, then change one input and observe what breaks."
+            points=&["Encrypt and decrypt with AES-GCM", "See why fresh nonces matter", "Learn why modern encryption also detects tampering"]
         />
     }
 }
@@ -299,7 +449,9 @@ fn KeypairsPage() -> impl IntoView {
             number="03"
             title="Public/private keypairs"
             eyebrow="TWO KEYS, DIFFERENT JOBS"
-            summary="Public-key cryptography separates what you can safely share from the secret material that proves control."
+            summary="Public-key cryptography separates material that is safe to publish from secret material that must remain under your control."
+            problem="Shared-secret encryption is useful—but first we somehow had to share a secret. Can I publish something useful without publishing the secret that gives me control?"
+            challenge="Generate a keypair in the workbench, then identify which operations still work when you keep only the public half and which require the private half."
             points=&["Generate a keypair in the browser", "Compare public and private material", "Understand what possession of each key permits"]
         />
     }
@@ -313,6 +465,8 @@ fn PublicKeyEncryptionPage() -> impl IntoView {
             title="Public-key encryption"
             eyebrow="ENCRYPT FOR SOMEONE ELSE"
             summary="A public key can let other people protect data for you without giving them the secret needed to decrypt it."
+            problem="You need to send me confidential data, but we've never exchanged a shared secret. Can you encrypt something that only I can open?"
+            challenge="Use two generated keypairs to encrypt for one recipient, then prove with the workbench that the other private key cannot decrypt the ciphertext."
             points=&["Encrypt using a recipient's public key", "Decrypt using the corresponding private key", "Contrast this with shared-secret encryption"]
         />
     }
@@ -326,7 +480,9 @@ fn SignaturesPage() -> impl IntoView {
             title="Digital signatures"
             eyebrow="PROVE CONTROL OF A KEY"
             summary="A signature binds a private key to exact data in a way that anyone with the public key can verify."
-            points=&["Sign an exact message", "Verify with the public key", "Watch verification fail when the message changes"]
+            problem="I publish a software release and you download it from somewhere else. How can you check that these exact bytes are the ones the holder of my private key approved?"
+            challenge="Use the workbench to verify a signature, then change one character in the message and watch the same signature fail."
+            points=&["Sign exact data with a private key", "Verify with the public key", "See how hashes and signatures fit together"]
         />
     }
 }
@@ -339,6 +495,8 @@ fn VerificationPage() -> impl IntoView {
             title="Verification & identity"
             eyebrow="WHAT DID WE ACTUALLY PROVE?"
             summary="Cryptography can give precise answers about keys and data. Connecting those answers to people, organizations, and truth requires additional evidence."
+            problem="A signature verifies successfully against a public key. Does that prove Michael Snoyman signed the message? Not by itself."
+            challenge="Use the verification workbench to establish exactly what a signature proves, then separate those facts from claims about who controls the key and whether the signed statement is true."
             points=&["Separate keys from identities", "Distinguish valid signatures from true statements", "Identify the trust assumptions outside the cryptography"]
         />
     }
@@ -365,17 +523,28 @@ fn ComingLesson(
     title: &'static str,
     eyebrow: &'static str,
     summary: &'static str,
+    problem: &'static str,
+    challenge: &'static str,
     points: &'static [&'static str],
 ) -> impl IntoView {
     view! {
         <LessonIntro number eyebrow title summary />
+        <section class="motivation-section content-section">
+            <p class="eyebrow">"WHY WOULD I WANT THIS?"</p>
+            <h2>{problem}</h2>
+        </section>
         <section class="coming-section">
             <div>
                 <p class="eyebrow">"LESSON IN DEVELOPMENT"</p>
-                <h2>"This workbench is coming next."</h2>
-                <p>"The route and lesson structure are in place. The interactive exercise will be added here without changing the overall course navigation."</p>
+                <h2>"The workbench will make you solve the problem."</h2>
+                <p>"The interactive exercise will be built around the scenario above rather than around abstract definitions."</p>
             </div>
             <ol>{points.iter().map(|point| view! { <li>{*point}</li> }).collect_view()}</ol>
+        </section>
+        <section class="planned-quiz content-section">
+            <p class="eyebrow">"PLANNED CHALLENGE"</p>
+            <h2>"Use the tool, then answer."</h2>
+            <p class="section-copy">{challenge}</p>
         </section>
     }
 }

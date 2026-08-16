@@ -2,6 +2,10 @@
 
 These instructions apply to the entire repository.
 
+## General agent collaboration
+
+For general agent-collaboration and engineering guidance, see [P2P Agents](https://github.com/snoyberg/p2p-agents/blob/master/AGENTS.md). Treat that repository as general reference material; this file is authoritative for TryCrypto-specific instructions and takes precedence where it intentionally differs.
+
 ## Family brand system
 
 The canonical shared brand guide lives in `snoyberg/snoyman.com`:

@@ -38,7 +38,7 @@
         <button type="button" data-candidate="b">Try candidate B</button>
         <div class="output"><span>CURRENT SHA-256</span><code class="exercise-hash-output"></code></div>
         <div class="quiz-choice-row"><button type="button" data-match="a">A matches</button><button type="button" data-match="b">B matches</button></div>
-        <p class="quiz-feedback"></p>
+        <p class="quiz-feedback" aria-live="polite"></p>
       </div>
       <div class="workbench-quiz" data-exercise="space">
         <h3>Does invisible whitespace count as different input?</h3>
@@ -48,7 +48,7 @@
         <button type="button" data-space="newline">Trailing newline</button>
         <div class="output"><span>CURRENT SHA-256</span><code class="exercise-hash-output"></code></div>
         <div class="quiz-choice-row"><button type="button" data-space-answer="same">Same contents</button><button type="button" data-space-answer="different">Different contents</button></div>
-        <p class="quiz-feedback"></p>
+        <p class="quiz-feedback" aria-live="polite"></p>
       </div>`;
 
     let matchDone = false;

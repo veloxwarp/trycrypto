@@ -75,13 +75,13 @@ pub fn KeypairExercises() -> impl IntoView {
                 <div class="quiz-choice-row key-choice-row">
                     <button type="button" on:click=move |_| {
                         if derived_challenge.get() { set_match_ok.set(Some(false)); }
-                    }><code>{decoy_one.clone()}</code></button>
+                    }><span class="candidate-label">"A"</span><code>{decoy_one.clone()}</code></button>
                     <button type="button" on:click=move |_| {
                         if derived_challenge.get() { set_match_ok.set(Some(true)); }
-                    }><code>{correct_public.clone()}</code></button>
+                    }><span class="candidate-label">"B"</span><code>{correct_public.clone()}</code></button>
                     <button type="button" on:click=move |_| {
                         if derived_challenge.get() { set_match_ok.set(Some(false)); }
-                    }><code>{decoy_two.clone()}</code></button>
+                    }><span class="candidate-label">"C"</span><code>{decoy_two.clone()}</code></button>
                 </div>
                 <p class="quiz-feedback">{move || {
                     if !derived_challenge.get() {

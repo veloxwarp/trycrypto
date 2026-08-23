@@ -23,18 +23,27 @@
       error.className = "field-error";
       decimal.closest(".byte-converter")?.after(error);
     }
+    error.setAttribute("aria-live", "polite");
+    decimal.setAttribute("aria-describedby", error.id);
+    hex.setAttribute("aria-describedby", error.id);
+
+    const showError = (message, invalidInput) => {
+      error.textContent = message;
+      decimal.setAttribute("aria-invalid", String(invalidInput === decimal));
+      hex.setAttribute("aria-invalid", String(invalidInput === hex));
+    };
 
     decimal.addEventListener("input", () => {
       const value = decimal.value;
       if (value === "") {
         hex.value = "";
-        error.textContent = "";
+        showError("", null);
       } else if (!/^\d+$/.test(value) || Number(value) > 255) {
         hex.value = "";
-        error.textContent = "Enter a decimal value from 0 through 255.";
+        showError("Enter a decimal value from 0 through 255.", decimal);
       } else {
         hex.value = Number(value).toString(16).toUpperCase().padStart(2, "0");
-        error.textContent = "";
+        showError("", null);
       }
     });
 
@@ -43,13 +52,13 @@
       hex.value = value;
       if (value === "") {
         decimal.value = "";
-        error.textContent = "";
+        showError("", null);
       } else if (!/^[0-9A-F]{1,2}$/.test(value)) {
         decimal.value = "";
-        error.textContent = "Enter hexadecimal using 0–9 and A–F.";
+        showError("Enter hexadecimal using 0–9 and A–F.", hex);
       } else {
         decimal.value = String(parseInt(value, 16));
-        error.textContent = "";
+        showError("", null);
       }
     });
   }

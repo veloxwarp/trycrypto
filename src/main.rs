@@ -35,7 +35,7 @@ fn App() -> impl IntoView {
     view! {
         <Router>
             <SiteHeader />
-            <main>
+            <main id="main-content">
                 <Routes fallback=|| view! { <NotFound /> }>
                     <Route path=path!("") view=home::HomePage />
                     <Route path=path!("index.html") view=home::HomePage />
@@ -88,19 +88,29 @@ fn VerificationPage() -> impl IntoView {
 
 #[component]
 fn SiteHeader() -> impl IntoView {
+    let (nav_open, set_nav_open) = signal(false);
+
     view! {
+        <a class="skip-link" href="#main-content">"Skip to lesson content"</a>
         <header class="site-header">
             <A href="/" exact=true attr:class="brand" attr:aria-label="TryCrypto home">
                 <span>"Try"<i>"Crypto"</i></span>
             </A>
-            <nav aria-label="Lessons">
-                <A href="/intro" exact=true>"Intro"</A>
-                <A href="/hashes" exact=true>"01 Hashes"</A>
-                <A href="/symmetric-encryption" exact=true>"02 Shared key"</A>
-                <A href="/keypairs" exact=true>"03 Public/private"</A>
-                <A href="/public-key-encryption" exact=true>"04 Public key"</A>
-                <A href="/signatures" exact=true>"05 Signatures"</A>
-                <A href="/verification" exact=true>"06 Verification"</A>
+            <button
+                type="button"
+                class="nav-toggle"
+                aria-controls="lesson-navigation"
+                aria-expanded=move || nav_open.get().to_string()
+                on:click=move |_| set_nav_open.update(|open| *open = !*open)
+            >{move || if nav_open.get() { "Close" } else { "Lessons" }}</button>
+            <nav id="lesson-navigation" aria-label="Lessons" class:nav-open=move || nav_open.get()>
+                <A href="/intro" exact=true on:click=move |_| set_nav_open.set(false)>"Intro"</A>
+                <A href="/hashes" exact=true on:click=move |_| set_nav_open.set(false)>"01 Hashes"</A>
+                <A href="/symmetric-encryption" exact=true on:click=move |_| set_nav_open.set(false)>"02 Shared key"</A>
+                <A href="/keypairs" exact=true on:click=move |_| set_nav_open.set(false)>"03 Public/private"</A>
+                <A href="/public-key-encryption" exact=true on:click=move |_| set_nav_open.set(false)>"04 Public key"</A>
+                <A href="/signatures" exact=true on:click=move |_| set_nav_open.set(false)>"05 Signatures"</A>
+                <A href="/verification" exact=true on:click=move |_| set_nav_open.set(false)>"06 Verification"</A>
             </nav>
         </header>
     }

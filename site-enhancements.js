@@ -23,18 +23,27 @@
       error.className = "field-error";
       decimal.closest(".byte-converter")?.after(error);
     }
+    error.setAttribute("aria-live", "polite");
+    decimal.setAttribute("aria-describedby", error.id);
+    hex.setAttribute("aria-describedby", error.id);
+
+    const showError = (message, invalidInput) => {
+      error.textContent = message;
+      decimal.setAttribute("aria-invalid", String(invalidInput === decimal));
+      hex.setAttribute("aria-invalid", String(invalidInput === hex));
+    };
 
     decimal.addEventListener("input", () => {
       const value = decimal.value;
       if (value === "") {
         hex.value = "";
-        error.textContent = "";
+        showError("", null);
       } else if (!/^\d+$/.test(value) || Number(value) > 255) {
         hex.value = "";
-        error.textContent = "Enter a decimal value from 0 through 255.";
+        showError("Enter a decimal value from 0 through 255.", decimal);
       } else {
         hex.value = Number(value).toString(16).toUpperCase().padStart(2, "0");
-        error.textContent = "";
+        showError("", null);
       }
     });
 
@@ -43,13 +52,13 @@
       hex.value = value;
       if (value === "") {
         decimal.value = "";
-        error.textContent = "";
+        showError("", null);
       } else if (!/^[0-9A-F]{1,2}$/.test(value)) {
         decimal.value = "";
-        error.textContent = "Enter hexadecimal using 0–9 and A–F.";
+        showError("Enter hexadecimal using 0–9 and A–F.", hex);
       } else {
         decimal.value = String(parseInt(value, 16));
-        error.textContent = "";
+        showError("", null);
       }
     });
   }
@@ -68,26 +77,76 @@
     section.appendChild(host);
   }
 
-  function explainNonce() {
-    if (location.pathname !== "/symmetric-encryption") return;
-    const plaintext = document.getElementById("encrypt-plaintext");
-    const box = plaintext?.closest(".mini-workbench");
-    if (!box || box.querySelector(".nonce-explanation")) return;
+  function installCopyButtons() {
+    for (const container of document.querySelectorAll(".output, [data-copyable]")) {
+      if (container.querySelector(":scope > .copy-button")) continue;
+      const target = container.querySelector("code");
+      if (!target) continue;
 
-    const nonceOutput = box.querySelector(".output");
-    const label = nonceOutput?.querySelector("span");
-    if (label) label.textContent = "NONCE · FRESH RANDOM 12 BYTES · NOT SECRET";
+      const label = container.dataset.copyable || container.querySelector("span")?.textContent.trim().toLowerCase() || "value";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-button";
+      button.setAttribute("aria-label", `Copy ${label}`);
+      button.title = `Copy ${label}`;
+      button.textContent = "Copy";
+      button.addEventListener("click", async () => {
+        const value = "value" in target ? target.value : target.textContent.trim();
+        if (!value || value === "—" || value === "Preparing…") return;
+        try {
+          await navigator.clipboard.writeText(value);
+          button.classList.add("copied");
+          button.textContent = "Copied";
+          button.setAttribute("aria-label", `${label} copied`);
+          button.title = "Copied";
+          window.setTimeout(() => {
+            button.classList.remove("copied");
+            button.textContent = "Copy";
+            button.setAttribute("aria-label", `Copy ${label}`);
+            button.title = `Copy ${label}`;
+          }, 1600);
+        } catch (_) {
+          button.title = "Copy failed";
+        }
+      });
+      container.appendChild(button);
+    }
+  }
 
-    const note = document.createElement("p");
-    note.className = "section-copy nonce-explanation";
-    note.textContent = "The nonce is a separate one-time value generated for this encryption. It is not derived from the plaintext and does not need to be secret. Store it with the ciphertext; AES-GCM needs the same nonce to decrypt, and a fresh nonce must be used for each encryption with a given key.";
-    nonceOutput?.before(note);
+  function installPasteButtons() {
+    for (const container of document.querySelectorAll("[data-pasteable]")) {
+      if (container.querySelector(":scope > .paste-button")) continue;
+      const target = container.querySelector("input, textarea");
+      if (!target) continue;
+
+      const label = container.dataset.pasteable || "value";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "paste-button";
+      button.setAttribute("aria-label", `Paste ${label}`);
+      button.title = `Paste ${label}`;
+      button.textContent = "Paste";
+      button.addEventListener("click", async () => {
+        try {
+          target.value = await navigator.clipboard.readText();
+          target.dispatchEvent(new Event("input", { bubbles: true }));
+          target.focus();
+          button.textContent = "Pasted";
+          window.setTimeout(() => { button.textContent = "Paste"; }, 1600);
+        } catch (_) {
+          button.textContent = "Paste failed";
+          window.setTimeout(() => { button.textContent = "Paste"; }, 1600);
+        }
+      });
+      container.appendChild(button);
+    }
   }
 
   function enhance() {
     installByteConverter();
     installKitSignup();
-    explainNonce();
+    installCopyButtons();
+    installPasteButtons();
     if (location.pathname === "/hashes") loadScript("/assets/hash.js");
   }
 

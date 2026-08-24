@@ -164,6 +164,6 @@ pub fn SignaturesLab() -> impl IntoView {
             <p class="quiz-feedback" aria-live="polite">{move||feedback.get()}</p>
         </section>
 
-        <LessonEnd exercises_complete=complete exercises_id="signature-exercises" next_href="/verification" next_label="Continue to 06 — Verification & identity →" />
+        <LessonEnd exercises_complete=complete exercises_id="signature-exercises" next_href="/verification-and-identity" next_label="Continue to 06 — Verification & identity →" />
     }
 }

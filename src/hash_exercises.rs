@@ -11,6 +11,6 @@ pub fn HashExercises() -> impl IntoView {
             <div id="hash-exercise-content"></div>
             <button id="hash-complete" hidden on:click=move |_| set_done.set(true)>"Complete"</button>
         </section>
-        <LessonEnd exercises_complete=complete exercises_id="hash-exercises" next_href="/symmetric-encryption" next_label="Continue to 02 — Shared-key encryption →" />
+        <LessonEnd exercises_complete=complete exercises_id="hash-exercises" next_href="/shared-key-encryption" next_label="Continue to 02 — Shared-key encryption →" />
     }
 }

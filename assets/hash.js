@@ -15,9 +15,6 @@
     const update = async (text = input.value) => {
       const value = await digest(text);
       output.textContent = value;
-      for (const local of document.querySelectorAll(".exercise-hash-output")) {
-        local.textContent = value;
-      }
       return value;
     };
 
@@ -33,21 +30,30 @@
       <div class="workbench-quiz" data-exercise="match">
         <h3>Which message matches this target fingerprint?</h3>
         <code class="target-hash">6c1e614182df466a0629118845873531184affe88aeb240ed834301a82908f47</code>
-        <p>Try both candidates. The current result appears here, so you don't need to scroll back to the workbench.</p>
-        <button type="button" data-candidate="a">Try candidate A</button>
-        <button type="button" data-candidate="b">Try candidate B</button>
-        <div class="output"><span>CURRENT SHA-256</span><code class="exercise-hash-output"></code></div>
+        <p>Load each message into the workbench. Its SHA-256 result also appears beside the message, so you can compare the full values here.</p>
+        <div class="candidate-grid">
+          <div>
+            <span>MESSAGE A</span>
+            <p><code>Meet me at 10:30 by the north entrance.</code></p>
+            <button type="button" data-candidate="a">Calculate message A</button>
+            <div class="output"><span>MESSAGE A · SHA-256</span><code data-candidate-hash="a">Not calculated yet</code></div>
+          </div>
+          <div>
+            <span>MESSAGE B</span>
+            <p><code>Meet me at 10:30 by the south entrance.</code></p>
+            <button type="button" data-candidate="b">Calculate message B</button>
+            <div class="output"><span>MESSAGE B · SHA-256</span><code data-candidate-hash="b">Not calculated yet</code></div>
+          </div>
+        </div>
         <div class="quiz-choice-row"><button type="button" data-match="a">A matches</button><button type="button" data-match="b">B matches</button></div>
         <p class="quiz-feedback" aria-live="polite"></p>
       </div>
       <div class="workbench-quiz" data-exercise="space">
-        <h3>Does invisible whitespace count as different input?</h3>
-        <p>Compare the clean sentence with a trailing space or newline.</p>
-        <button type="button" data-space="clean">Clean text</button>
-        <button type="button" data-space="space">Trailing space</button>
-        <button type="button" data-space="newline">Trailing newline</button>
-        <div class="output"><span>CURRENT SHA-256</span><code class="exercise-hash-output"></code></div>
-        <div class="quiz-choice-row"><button type="button" data-space-answer="same">Same contents</button><button type="button" data-space-answer="different">Different contents</button></div>
+        <h3>Do spaces and line breaks count as part of the input?</h3>
+        <p>Click in the box below. Put the cursor after the period, then press the space bar a few times or press Enter to add a new line. Watch what happens to the fingerprint.</p>
+        <label for="whitespace-exercise-input"><span>EDIT THIS MESSAGE</span><textarea id="whitespace-exercise-input">Backup finished successfully.</textarea></label>
+        <div class="output"><span>THIS EXACT MESSAGE · SHA-256</span><code class="exercise-space-hash">Calculating…</code></div>
+        <div class="quiz-choice-row"><button type="button" data-space-answer="same">The input stayed the same</button><button type="button" data-space-answer="different">The input changed</button></div>
         <p class="quiz-feedback" aria-live="polite"></p>
       </div>`;
 
@@ -63,9 +69,11 @@
       b: "Meet me at 10:30 by the south entrance.",
     };
     match.querySelectorAll("[data-candidate]").forEach(button => {
-      button.addEventListener("click", () => {
-        input.value = messages[button.dataset.candidate];
-        update(input.value);
+      button.addEventListener("click", async () => {
+        const candidate = button.dataset.candidate;
+        input.value = messages[candidate];
+        const value = await update(input.value);
+        match.querySelector(`[data-candidate-hash="${candidate}"]`).textContent = value;
       });
     });
     match.querySelectorAll("[data-match]").forEach(button => {
@@ -80,23 +88,26 @@
     });
 
     const space = host.querySelector('[data-exercise="space"]');
-    const values = {
-      clean: "Backup finished successfully.",
-      space: "Backup finished successfully. ",
-      newline: "Backup finished successfully.\n",
+    const spaceInput = space.querySelector("textarea");
+    const spaceHash = space.querySelector(".exercise-space-hash");
+    let spaceEdited = false;
+    const updateSpace = async () => {
+      const value = await digest(spaceInput.value);
+      spaceHash.textContent = value;
     };
-    space.querySelectorAll("[data-space]").forEach(button => {
-      button.addEventListener("click", () => {
-        input.value = values[button.dataset.space];
-        update(input.value);
-      });
+    updateSpace();
+    spaceInput.addEventListener("input", () => {
+      spaceEdited = spaceInput.value !== "Backup finished successfully.";
+      updateSpace();
     });
     space.querySelectorAll("[data-space-answer]").forEach(button => {
       button.addEventListener("click", () => {
-        const ok = button.dataset.spaceAnswer === "different";
+        const ok = button.dataset.spaceAnswer === "different" && spaceEdited;
         space.querySelector(".quiz-feedback").textContent = ok
-          ? "Right. A space or newline is part of the exact input."
-          : "Compare the fingerprints. Cryptography depends on the exact input.";
+          ? "Right. Spaces and line breaks are characters too, even when they are easy to overlook. Cryptography uses the exact input."
+          : spaceEdited
+            ? "Compare the fingerprints. Those extra characters changed the input."
+            : "First add a few spaces or press Enter in the message box, then compare the fingerprint.";
         if (ok) spaceDone = true;
         finish();
       });

@@ -77,26 +77,9 @@
     section.appendChild(host);
   }
 
-  function explainNonce() {
-    if (location.pathname !== "/symmetric-encryption") return;
-    const plaintext = document.getElementById("encrypt-plaintext");
-    const box = plaintext?.closest(".mini-workbench");
-    if (!box || box.querySelector(".nonce-explanation")) return;
-
-    const nonceOutput = box.querySelector(".output");
-    const label = nonceOutput?.querySelector("span");
-    if (label) label.textContent = "NONCE · FRESH RANDOM 12 BYTES · NOT SECRET";
-
-    const note = document.createElement("p");
-    note.className = "section-copy nonce-explanation";
-    note.textContent = "The nonce is a separate one-time value generated for this encryption. It is not derived from the plaintext and does not need to be secret. Store it with the ciphertext; AES-GCM needs the same nonce to decrypt, and a fresh nonce must be used for each encryption with a given key.";
-    nonceOutput?.before(note);
-  }
-
   function enhance() {
     installByteConverter();
     installKitSignup();
-    explainNonce();
     if (location.pathname === "/hashes") loadScript("/assets/hash.js");
   }
 

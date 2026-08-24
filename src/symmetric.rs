@@ -22,6 +22,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
     });
 
     let (shared_key, set_shared_key) = signal(initial_key.clone());
+    let (encrypt_key, set_encrypt_key) = signal(initial_key.clone());
     let (key_feedback, set_key_feedback) = signal(String::new());
     let (plaintext, set_plaintext) = signal(String::from("My important backup contents"));
     let (ciphertext, set_ciphertext) = signal(String::new());
@@ -64,7 +65,8 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         <section class="motivation-section content-section">
             <h2>"I want to store my backup somewhere else. How do I stop the storage provider from reading it?"</h2>
             <p class="section-copy">"The original readable data is called plaintext. Encryption applies a secret value called a shared key to that plaintext and produces scrambled data called ciphertext. Later, decryption applies the same shared key to the ciphertext and recovers the plaintext."</p>
-            <p class="section-copy">"This is called shared-key or symmetric encryption because the same secret key works in both directions. For this lesson, the shared key is a randomly generated 256-bit number displayed as 64 hexadecimal digits."</p>
+            <p class="section-copy">"This is called shared-key or symmetric encryption because the same secret key works in both directions. The key in this lesson is just one very large number: a 256-bit value with 2²⁵⁶ possible choices. That's about 1.16 × 10⁷⁷ possibilities—roughly a 1 followed by 77 zeros. Even trying a billion keys every second for the age of the universe would not come close to searching them all."</p>
+            <p class="section-copy">"The encryption and decryption steps must receive exact copies of that same number. TryCrypto displays it as 64 hexadecimal digits, which makes the value easier to copy without changing it."</p>
 
             <div class="encryption-visual" aria-label="Shared-key encryption and decryption">
                 <article>
@@ -100,34 +102,35 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             <div class="workbench-heading"><div><h2>"Encrypt, then decrypt with the same key."</h2></div><p>"Everything happens locally in your browser. Generate a shared key, encrypt some plaintext, then use the same key to recover it."</p></div>
             <div class="mini-workbench">
                 <p class="exercise-number">"Shared key"</p><h3>"A random 256-bit secret."</h3>
-                <label for="shared-key">"Shared key (64 hex digits)"</label>
-                <input id="shared-key" maxlength="64" prop:value=move || shared_key.get() on:input=move |ev| { let value = event_target_value(&ev); set_shared_key.set(value.clone()); set_decrypt_key.set(value); set_key_feedback.set(String::new()); } />
-                <button type="button" class="button primary" on:click=move |_| { match crypto::random_hex(32) { Ok(key) => { set_shared_key.set(key.clone()); set_decrypt_key.set(key); set_key_feedback.set("Generated a new random 256-bit key.".to_owned()); } Err(_) => set_key_feedback.set("Couldn't generate random bytes in this browser.".to_owned()), } }>"Generate new key"</button>
+                <label for="shared-key">"Generated shared key (64 hex digits)"</label>
+                <div class="copy-input-row" data-copyable="Generated shared key"><input id="shared-key" maxlength="64" prop:value=move || shared_key.get() on:input=move |ev| { set_shared_key.set(event_target_value(&ev)); set_key_feedback.set(String::new()); } /></div>
+                <button type="button" class="button primary" on:click=move |_| { match crypto::random_hex(32) { Ok(key) => { set_shared_key.set(key); set_key_feedback.set("Generated a new key. Copy it into both key fields below.".to_owned()); } Err(_) => set_key_feedback.set("Couldn't generate random bytes in this browser.".to_owned()), } }>"Generate new key"</button>
                 <p class="quiz-feedback" aria-live="polite">{move || key_feedback.get()}</p>
             </div>
 
-            <div class="workbench-quiz">
+            <div id="encrypt-step" class="workbench-quiz">
                 <p class="exercise-number">"Step 1 · Plaintext → ciphertext"</p><h3>"Encrypt a value with AES-GCM."</h3>
                 <div class="mini-workbench">
+                    <label for="encrypt-key">"Encryption key (64 hex digits)"</label><div class="copy-input-row" data-copyable="Encryption key"><input id="encrypt-key" maxlength="64" prop:value=move || encrypt_key.get() on:input=move |ev| set_encrypt_key.set(event_target_value(&ev)) /></div>
                     <label for="encrypt-plaintext">"Plaintext"</label><input id="encrypt-plaintext" prop:value=move || plaintext.get() on:input=move |ev| set_plaintext.set(event_target_value(&ev)) />
-                    <button type="button" class="button primary" on:click=move |_| { let key=shared_key.get(); let text=plaintext.get(); set_encrypt_feedback.set("Encrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_encrypt(&key,&text).await { Ok(encrypted) => { set_ciphertext.set(encrypted.clone()); set_decrypt_key.set(key.clone()); set_decrypt_ciphertext.set(encrypted.clone()); set_decrypted_text.set(String::new()); set_decrypt_feedback.set(String::new()); if key.eq_ignore_ascii_case(ENCRYPT_EXERCISE_KEY) && text == ENCRYPT_EXERCISE_PLAINTEXT { set_encrypt_answer.set(encrypted); } set_encrypt_feedback.set("Encrypted. The ciphertext was copied into the decryption step below.".to_owned()); } Err(_) => set_encrypt_feedback.set("Encryption failed. The shared key must be exactly 64 hexadecimal digits.".to_owned()), } }); }>"Encrypt"</button>
-                    <div class="output"><span>"CIPHERTEXT"</span><code>{move || { let value=ciphertext.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
+                    <button type="button" class="button primary" on:click=move |_| { let key=encrypt_key.get(); let text=plaintext.get(); set_encrypt_feedback.set("Encrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_encrypt(&key,&text).await { Ok(encrypted) => { set_ciphertext.set(encrypted.clone()); set_decrypt_ciphertext.set(encrypted); set_decrypted_text.set(String::new()); set_decrypt_feedback.set(String::new()); set_encrypt_feedback.set("Encrypted. The ciphertext was copied into the decryption step below.".to_owned()); } Err(_) => set_encrypt_feedback.set("Encryption failed. The shared key must be exactly 64 hexadecimal digits.".to_owned()), } }); }>"Encrypt"</button>
+                    <div class="output" data-copyable="Ciphertext"><span>"CIPHERTEXT"</span><code>{move || { let value=ciphertext.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
                     <p class="quiz-feedback" aria-live="polite">{move || encrypt_feedback.get()}</p>
                 </div>
             </div>
 
-            <div class="workbench-quiz">
+            <div id="decrypt-step" class="workbench-quiz">
                 <p class="exercise-number">"Step 2 · Ciphertext → plaintext"</p><h3>"Decrypt it."</h3><p>"Encryption copies the shared key and ciphertext here for convenience. Edit either value and see what happens."</p>
                 <div class="mini-workbench">
-                    <label for="decrypt-key">"Decryption key (64 hex digits)"</label><input id="decrypt-key" maxlength="64" prop:value=move || decrypt_key.get() on:input=move |ev| set_decrypt_key.set(event_target_value(&ev)) />
-                    <label for="decrypt-ciphertext">"Ciphertext"</label><input id="decrypt-ciphertext" prop:value=move || decrypt_ciphertext.get() on:input=move |ev| set_decrypt_ciphertext.set(event_target_value(&ev)) />
+                    <label for="decrypt-key">"Decryption key (64 hex digits)"</label><div class="copy-input-row" data-copyable="Decryption key"><input id="decrypt-key" maxlength="64" prop:value=move || decrypt_key.get() on:input=move |ev| set_decrypt_key.set(event_target_value(&ev)) /></div>
+                    <label for="decrypt-ciphertext">"Ciphertext"</label><div class="copy-input-row" data-copyable="Ciphertext"><input id="decrypt-ciphertext" prop:value=move || decrypt_ciphertext.get() on:input=move |ev| set_decrypt_ciphertext.set(event_target_value(&ev)) /></div>
                     <button type="button" class="button primary" on:click=move |_| { let key=decrypt_key.get(); let ciphertext=decrypt_ciphertext.get(); set_decrypt_feedback.set("Decrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_decrypt(&key,&ciphertext).await { Ok(text) => { set_decrypted_text.set(text); set_decrypt_feedback.set("Decryption succeeded.".to_owned()); } Err(_) => { set_decrypted_text.set(String::new()); set_decrypt_feedback.set("Decryption failed. The key and ciphertext must match exactly.".to_owned()); } } }); }>"Decrypt"</button>
-                    <div class="output" aria-live="polite"><span>"RECOVERED PLAINTEXT"</span><code>{move || { let value=decrypted_text.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
+                    <div class="output" data-copyable="Recovered plaintext" aria-live="polite"><span>"RECOVERED PLAINTEXT"</span><code>{move || { let value=decrypted_text.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
                     <p class="quiz-feedback" aria-live="polite">{move || decrypt_feedback.get()}</p>
                 </div>
             </div>
 
-            <details class="bonus-note"><summary>"Bonus: why does the ciphertext change each time?"</summary><p>"Encrypt the same plaintext twice with the same key and the ciphertext will still look different. The encryption process adds fresh randomness inside the ciphertext package so repeated values do not create an obvious pattern. Decryption reads that extra information automatically; you do not need to manage it yourself."</p></details>
+            <details class="bonus-note"><summary>"Bonus: why does the ciphertext change each time I encrypt?"</summary><p>"Encrypt the same plaintext twice with the same key and the ciphertext will still look different. The encryption process adds fresh randomness inside the ciphertext package so repeated values do not create an obvious pattern. Decryption reads that extra information automatically; you do not need to manage it yourself."</p></details>
         </section>
 
         <section id="encryption-exercises" class="content-section planned-quiz">
@@ -135,9 +138,9 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             <div class="workbench-quiz">
                 <p class="exercise-number">"1 of 2 · Provide the ciphertext"</p>
                 <h3>"Encrypt this plaintext with the provided shared key."</h3>
-                <div class="output"><span>"PLAINTEXT"</span><code>{ENCRYPT_EXERCISE_PLAINTEXT}</code></div>
-                <div class="output"><span>"SHARED KEY"</span><code>{ENCRYPT_EXERCISE_KEY}</code></div>
-                <a class="button ghost" href="#encryption-workbench" on:click=move |_| { set_shared_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_decrypt_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_plaintext.set(ENCRYPT_EXERCISE_PLAINTEXT.to_owned()); set_ciphertext.set(String::new()); set_encrypt_feedback.set("Exercise inputs loaded. Click Encrypt, then return to the exercise.".to_owned()); }>"Load these inputs in the workbench ↑"</a>
+                <div class="output" data-copyable="Exercise plaintext"><span>"PLAINTEXT"</span><code>{ENCRYPT_EXERCISE_PLAINTEXT}</code></div>
+                <div class="output" data-copyable="Exercise shared key"><span>"SHARED KEY"</span><code>{ENCRYPT_EXERCISE_KEY}</code></div>
+                <a class="button ghost" href="#encrypt-step" on:click=move |_| { set_shared_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_encrypt_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_plaintext.set(ENCRYPT_EXERCISE_PLAINTEXT.to_owned()); set_ciphertext.set(String::new()); set_encrypt_feedback.set("Exercise inputs loaded. Click Encrypt, then explicitly copy the ciphertext into the answer field.".to_owned()); }>"Load these inputs in Encrypt ↑"</a>
                 <label for="encrypt-exercise-answer">"Your ciphertext"</label>
                 <textarea id="encrypt-exercise-answer" prop:value=move || encrypt_answer.get() on:input=move |ev| { set_encrypt_answer.set(event_target_value(&ev)); set_encrypt_exercise_done.set(false); set_encrypt_exercise_feedback.set(String::new()); }></textarea>
                 <button type="button" class="button primary" on:click=move |_| { let answer=encrypt_answer.get(); set_encrypt_exercise_feedback.set("Checking…".to_owned()); spawn_local(async move { match crypto::aes_gcm_decrypt(ENCRYPT_EXERCISE_KEY,&answer).await { Ok(value) if value==ENCRYPT_EXERCISE_PLAINTEXT => { set_encrypt_exercise_done.set(true); set_encrypt_exercise_feedback.set("Correct. That ciphertext decrypts to the requested plaintext.".to_owned()); }, _ => { set_encrypt_exercise_done.set(false); set_encrypt_exercise_feedback.set("That ciphertext does not decrypt to the requested plaintext with this key.".to_owned()); } } }); }>"Check ciphertext"</button>
@@ -148,9 +151,9 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
                 <p class="exercise-number">"2 of 2 · Find the secret code"</p>
                 <h3>"Decrypt this ciphertext."</h3>
                 <p>"Use the provided shared key and ciphertext in the workbench. The recovered plaintext contains a five-digit secret code. Enter only those five digits below."</p>
-                <div class="output"><span>"SHARED KEY"</span><code>{decrypt_exercise_key.clone()}</code></div>
-                <div class="output"><span>"CIPHERTEXT"</span><code>{move || { let value=secret_ciphertext.get(); if value.is_empty(){"Preparing…".to_owned()}else{value} }}</code></div>
-                <a class="button ghost" href="#encryption-workbench" on:click={let decrypt_exercise_key=decrypt_exercise_key.clone(); move |_| { set_decrypt_key.set(decrypt_exercise_key.clone()); set_decrypt_ciphertext.set(secret_ciphertext.get()); set_decrypted_text.set(String::new()); set_decrypt_feedback.set("Exercise inputs loaded. Click Decrypt, then return to enter the code.".to_owned()); }}>"Load these inputs in the workbench ↑"</a>
+                <div class="output" data-copyable="Exercise shared key"><span>"SHARED KEY"</span><code>{decrypt_exercise_key.clone()}</code></div>
+                <div class="output" data-copyable="Exercise ciphertext"><span>"CIPHERTEXT"</span><code>{move || { let value=secret_ciphertext.get(); if value.is_empty(){"Preparing…".to_owned()}else{value} }}</code></div>
+                <a class="button ghost" href="#decrypt-step" on:click={let decrypt_exercise_key=decrypt_exercise_key.clone(); move |_| { set_decrypt_key.set(decrypt_exercise_key.clone()); set_decrypt_ciphertext.set(secret_ciphertext.get()); set_decrypted_text.set(String::new()); set_decrypt_feedback.set("Exercise inputs loaded. Click Decrypt, then return to enter the code.".to_owned()); }}>"Load these inputs in Decrypt ↑"</a>
                 <label for="decrypt-exercise-answer">"Secret code"</label>
                 <input id="decrypt-exercise-answer" inputmode="numeric" maxlength="5" prop:value=move || decrypt_answer.get() on:input=move |ev| { set_decrypt_answer.set(event_target_value(&ev)); set_decrypt_exercise_done.set(false); set_decrypt_exercise_feedback.set(String::new()); } />
                 <button type="button" class="button primary" on:click={let secret_code=secret_code.clone(); move |_| { let correct=decrypt_answer.get().trim()==secret_code; set_decrypt_exercise_done.set(correct); set_decrypt_exercise_feedback.set(if correct { "Correct. You recovered the secret code.".to_owned() } else { "That is not the code in the decrypted plaintext. Try the workbench again.".to_owned() }); }}>"Check code"</button>

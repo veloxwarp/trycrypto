@@ -77,9 +77,45 @@
     section.appendChild(host);
   }
 
+  function installCopyButtons() {
+    for (const container of document.querySelectorAll("[data-copyable]")) {
+      if (container.dataset.copyBound === "true") continue;
+      const target = container.querySelector("input, textarea, code");
+      if (!target) continue;
+      container.dataset.copyBound = "true";
+
+      const label = container.dataset.copyable || "value";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-button";
+      button.setAttribute("aria-label", `Copy ${label}`);
+      button.title = `Copy ${label}`;
+      button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="13" height="13" rx="1"></rect><path d="M17 7V4H4v13h3"></path></svg>`;
+      button.addEventListener("click", async () => {
+        const value = "value" in target ? target.value : target.textContent.trim();
+        if (!value || value === "—" || value === "Preparing…") return;
+        try {
+          await navigator.clipboard.writeText(value);
+          button.classList.add("copied");
+          button.setAttribute("aria-label", `${label} copied`);
+          button.title = "Copied";
+          window.setTimeout(() => {
+            button.classList.remove("copied");
+            button.setAttribute("aria-label", `Copy ${label}`);
+            button.title = `Copy ${label}`;
+          }, 1600);
+        } catch (_) {
+          button.title = "Copy failed";
+        }
+      });
+      container.appendChild(button);
+    }
+  }
+
   function enhance() {
     installByteConverter();
     installKitSignup();
+    installCopyButtons();
     if (location.pathname === "/hashes") loadScript("/assets/hash.js");
   }
 

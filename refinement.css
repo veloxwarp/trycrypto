@@ -341,6 +341,58 @@ footer a {
   color: var(--muted);
   line-height: 1.65;
 }
+.copy-input-row,
+[data-copyable] {
+  position: relative;
+}
+.copy-input-row input,
+.copy-input-row textarea {
+  width: 100%;
+  padding-right: 54px;
+}
+.output[data-copyable] {
+  padding-right: 60px;
+}
+.copy-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--navy);
+}
+.copy-input-row .copy-button {
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+}
+.copy-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+.copy-button:hover,
+.copy-button.copied {
+  border-color: var(--teal);
+  background: var(--soft-teal);
+  color: var(--teal);
+}
+.copy-button.copied svg { display: none; }
+.copy-button.copied::before {
+  content: "✓";
+  font-size: 18px;
+  font-weight: 800;
+}
 .candidate-grid .output,
 .planned-quiz .output + .output,
 .planned-quiz button + .output {

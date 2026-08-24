@@ -341,57 +341,58 @@ footer a {
   color: var(--muted);
   line-height: 1.65;
 }
-.copy-input-row,
+.output,
 [data-copyable] {
   position: relative;
 }
-.copy-input-row input,
-.copy-input-row textarea {
-  width: 100%;
-  padding-right: 54px;
+.output {
+  padding-right: 100px;
 }
-.output[data-copyable] {
-  padding-right: 60px;
-}
-.copy-button {
+.output > .copy-button {
   position: absolute;
   top: 10px;
   right: 10px;
   display: inline-flex;
-  width: 40px;
-  min-height: 40px;
+  width: auto;
+  min-height: 46px;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 0 14px;
+  border: 2px solid var(--white);
+  background: var(--white);
+  color: var(--navy);
+  font-weight: 750;
+}
+.workbench .output > .copy-button:hover:not(:disabled),
+.planned-quiz .output > .copy-button:hover:not(:disabled),
+.output > .copy-button:hover,
+.output > .copy-button.copied {
+  border-color: var(--teal-bright);
+  background: var(--teal-bright);
+  color: var(--navy);
+}
+.paste-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.paste-input-row input,
+.paste-input-row textarea {
+  width: 100%;
+  min-width: 0;
+}
+.paste-button {
+  min-height: 44px;
+  padding: 0 16px;
   border: 1px solid var(--line);
   background: var(--white);
   color: var(--navy);
+  font-weight: 750;
 }
-.copy-input-row .copy-button {
-  top: 50%;
-  right: 4px;
-  transform: translateY(-50%);
-}
-.copy-button svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
-.copy-button:hover,
-.copy-button.copied {
+.paste-button:hover {
   border-color: var(--teal);
   background: var(--soft-teal);
   color: var(--teal);
-}
-.copy-button.copied svg { display: none; }
-.copy-button.copied::before {
-  content: "✓";
-  font-size: 18px;
-  font-weight: 800;
 }
 .candidate-grid .output,
 .planned-quiz .output + .output,

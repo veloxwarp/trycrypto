@@ -52,6 +52,6 @@ pub fn PublicKeyLab() -> impl IntoView {
             <div class="mini-workbench exercise-checklist"><p>{move||if encrypted_seen.get(){"✓ Encrypt a value for A"}else{"○ Encrypt a value for A"}}</p><p>{move||if a_ok.get(){"✓ Recover it with A's private key"}else{"○ Decrypt it with A's private key"}}</p><p>{move||if b_failed.get(){"✓ Observe that B's private key cannot decrypt it"}else{"○ Try decrypting it with B's private key"}}</p></div>
             <div class="workbench-quiz"><p class="exercise-number">"Question"</p><h3>"You encrypted for A. Who should be able to recover the plaintext?"</h3><div class="quiz-choice-row"><button type="button" on:click=move |_|set_recipient_answer.set(Some(true))>"Recipient A"</button><button type="button" on:click=move |_|set_recipient_answer.set(Some(false))>"Recipient B"</button><button type="button" on:click=move |_|set_recipient_answer.set(Some(false))>"Either one"</button></div><p class="quiz-feedback">{move||match recipient_answer.get(){Some(true)=>"Correct. A's private key corresponds to the public key used for this encryption.",Some(false)=>"Try both decryption buttons above and compare the results.",None=>""}}</p></div>
         </section>
-        <LessonEnd exercises_complete=complete exercises_id="public-key-exercises" next_href="/signatures" next_label="Continue to 05 — Digital signatures →" />
+        <LessonEnd exercises_complete=complete exercises_id="public-key-exercises" next_href="/digital-signatures" next_label="Continue to 05 — Digital signatures →" />
     }
 }

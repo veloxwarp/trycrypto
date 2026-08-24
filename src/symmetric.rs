@@ -102,8 +102,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             <div class="workbench-heading"><div><h2>"Encrypt, then decrypt with the same key."</h2></div><p>"Everything happens locally in your browser. Generate a shared key, encrypt some plaintext, then use the same key to recover it."</p></div>
             <div class="mini-workbench">
                 <p class="exercise-number">"Shared key"</p><h3>"A random 256-bit secret."</h3>
-                <label for="shared-key">"Generated shared key (64 hex digits)"</label>
-                <div class="copy-input-row" data-copyable="Generated shared key"><input id="shared-key" maxlength="64" prop:value=move || shared_key.get() on:input=move |ev| { set_shared_key.set(event_target_value(&ev)); set_key_feedback.set(String::new()); } /></div>
+                <div class="output"><span>"GENERATED SHARED KEY · 64 HEX DIGITS"</span><code>{move || shared_key.get()}</code></div>
                 <button type="button" class="button primary" on:click=move |_| { match crypto::random_hex(32) { Ok(key) => { set_shared_key.set(key); set_key_feedback.set("Generated a new key. Copy it into both key fields below.".to_owned()); } Err(_) => set_key_feedback.set("Couldn't generate random bytes in this browser.".to_owned()), } }>"Generate new key"</button>
                 <p class="quiz-feedback" aria-live="polite">{move || key_feedback.get()}</p>
             </div>
@@ -111,19 +110,19 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             <div id="encrypt-step" class="workbench-quiz">
                 <p class="exercise-number">"Step 1 · Plaintext → ciphertext"</p><h3>"Encrypt a value with AES-GCM."</h3>
                 <div class="mini-workbench">
-                    <label for="encrypt-key">"Encryption key (64 hex digits)"</label><div class="copy-input-row" data-copyable="Encryption key"><input id="encrypt-key" maxlength="64" prop:value=move || encrypt_key.get() on:input=move |ev| set_encrypt_key.set(event_target_value(&ev)) /></div>
+                    <label for="encrypt-key">"Encryption key (64 hex digits)"</label><div class="paste-input-row" data-pasteable="encryption key"><input id="encrypt-key" maxlength="64" prop:value=move || encrypt_key.get() on:input=move |ev| set_encrypt_key.set(event_target_value(&ev)) /></div>
                     <label for="encrypt-plaintext">"Plaintext"</label><input id="encrypt-plaintext" prop:value=move || plaintext.get() on:input=move |ev| set_plaintext.set(event_target_value(&ev)) />
-                    <button type="button" class="button primary" on:click=move |_| { let key=encrypt_key.get(); let text=plaintext.get(); set_encrypt_feedback.set("Encrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_encrypt(&key,&text).await { Ok(encrypted) => { set_ciphertext.set(encrypted.clone()); set_decrypt_ciphertext.set(encrypted); set_decrypted_text.set(String::new()); set_decrypt_feedback.set(String::new()); set_encrypt_feedback.set("Encrypted. The ciphertext was copied into the decryption step below.".to_owned()); } Err(_) => set_encrypt_feedback.set("Encryption failed. The shared key must be exactly 64 hexadecimal digits.".to_owned()), } }); }>"Encrypt"</button>
+                    <button type="button" class="button primary" on:click=move |_| { let key=encrypt_key.get(); let text=plaintext.get(); set_encrypt_feedback.set("Encrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_encrypt(&key,&text).await { Ok(encrypted) => { set_ciphertext.set(encrypted); set_decrypted_text.set(String::new()); set_decrypt_feedback.set(String::new()); set_encrypt_feedback.set("Encrypted. Copy the generated ciphertext when you are ready to decrypt it.".to_owned()); } Err(_) => set_encrypt_feedback.set("Encryption failed. The shared key must be exactly 64 hexadecimal digits.".to_owned()), } }); }>"Encrypt"</button>
                     <div class="output" data-copyable="Ciphertext"><span>"CIPHERTEXT"</span><code>{move || { let value=ciphertext.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
                     <p class="quiz-feedback" aria-live="polite">{move || encrypt_feedback.get()}</p>
                 </div>
             </div>
 
             <div id="decrypt-step" class="workbench-quiz">
-                <p class="exercise-number">"Step 2 · Ciphertext → plaintext"</p><h3>"Decrypt it."</h3><p>"Encryption copies the shared key and ciphertext here for convenience. Edit either value and see what happens."</p>
+                <p class="exercise-number">"Step 2 · Ciphertext → plaintext"</p><h3>"Decrypt it."</h3><p>"Paste the same shared key and the generated ciphertext here. Change either value to see why they must match exactly."</p>
                 <div class="mini-workbench">
-                    <label for="decrypt-key">"Decryption key (64 hex digits)"</label><div class="copy-input-row" data-copyable="Decryption key"><input id="decrypt-key" maxlength="64" prop:value=move || decrypt_key.get() on:input=move |ev| set_decrypt_key.set(event_target_value(&ev)) /></div>
-                    <label for="decrypt-ciphertext">"Ciphertext"</label><div class="copy-input-row" data-copyable="Ciphertext"><input id="decrypt-ciphertext" prop:value=move || decrypt_ciphertext.get() on:input=move |ev| set_decrypt_ciphertext.set(event_target_value(&ev)) /></div>
+                    <label for="decrypt-key">"Decryption key (64 hex digits)"</label><div class="paste-input-row" data-pasteable="decryption key"><input id="decrypt-key" maxlength="64" prop:value=move || decrypt_key.get() on:input=move |ev| set_decrypt_key.set(event_target_value(&ev)) /></div>
+                    <label for="decrypt-ciphertext">"Ciphertext"</label><div class="paste-input-row" data-pasteable="ciphertext"><input id="decrypt-ciphertext" prop:value=move || decrypt_ciphertext.get() on:input=move |ev| set_decrypt_ciphertext.set(event_target_value(&ev)) /></div>
                     <button type="button" class="button primary" on:click=move |_| { let key=decrypt_key.get(); let ciphertext=decrypt_ciphertext.get(); set_decrypt_feedback.set("Decrypting…".to_owned()); spawn_local(async move { match crypto::aes_gcm_decrypt(&key,&ciphertext).await { Ok(text) => { set_decrypted_text.set(text); set_decrypt_feedback.set("Decryption succeeded.".to_owned()); } Err(_) => { set_decrypted_text.set(String::new()); set_decrypt_feedback.set("Decryption failed. The key and ciphertext must match exactly.".to_owned()); } } }); }>"Decrypt"</button>
                     <div class="output" data-copyable="Recovered plaintext" aria-live="polite"><span>"RECOVERED PLAINTEXT"</span><code>{move || { let value=decrypted_text.get(); if value.is_empty(){"—".to_owned()}else{value} }}</code></div>
                     <p class="quiz-feedback" aria-live="polite">{move || decrypt_feedback.get()}</p>
@@ -142,7 +141,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
                 <div class="output" data-copyable="Exercise shared key"><span>"SHARED KEY"</span><code>{ENCRYPT_EXERCISE_KEY}</code></div>
                 <a class="button ghost" href="#encrypt-step" on:click=move |_| { set_shared_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_encrypt_key.set(ENCRYPT_EXERCISE_KEY.to_owned()); set_plaintext.set(ENCRYPT_EXERCISE_PLAINTEXT.to_owned()); set_ciphertext.set(String::new()); set_encrypt_feedback.set("Exercise inputs loaded. Click Encrypt, then explicitly copy the ciphertext into the answer field.".to_owned()); }>"Load these inputs in Encrypt ↑"</a>
                 <label for="encrypt-exercise-answer">"Your ciphertext"</label>
-                <textarea id="encrypt-exercise-answer" prop:value=move || encrypt_answer.get() on:input=move |ev| { set_encrypt_answer.set(event_target_value(&ev)); set_encrypt_exercise_done.set(false); set_encrypt_exercise_feedback.set(String::new()); }></textarea>
+                <div class="paste-input-row" data-pasteable="ciphertext answer"><textarea id="encrypt-exercise-answer" prop:value=move || encrypt_answer.get() on:input=move |ev| { set_encrypt_answer.set(event_target_value(&ev)); set_encrypt_exercise_done.set(false); set_encrypt_exercise_feedback.set(String::new()); }></textarea></div>
                 <button type="button" class="button primary" on:click=move |_| { let answer=encrypt_answer.get(); set_encrypt_exercise_feedback.set("Checking…".to_owned()); spawn_local(async move { match crypto::aes_gcm_decrypt(ENCRYPT_EXERCISE_KEY,&answer).await { Ok(value) if value==ENCRYPT_EXERCISE_PLAINTEXT => { set_encrypt_exercise_done.set(true); set_encrypt_exercise_feedback.set("Correct. That ciphertext decrypts to the requested plaintext.".to_owned()); }, _ => { set_encrypt_exercise_done.set(false); set_encrypt_exercise_feedback.set("That ciphertext does not decrypt to the requested plaintext with this key.".to_owned()); } } }); }>"Check ciphertext"</button>
                 <p class="quiz-feedback" aria-live="polite">{move || encrypt_exercise_feedback.get()}</p>
             </div>
@@ -173,6 +172,6 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
             <p class="section-copy">"The next lesson introduces public and private keys, which give us a new way to address the key-sharing problem."</p>
         </section>
 
-        <LessonEnd exercises_complete exercises_id="encryption-exercises" next_href="/keypairs" next_label="Continue to 03 — Public & private keys →" />
+        <LessonEnd exercises_complete exercises_id="encryption-exercises" next_href="/public-key" next_label="Continue to 03 — Public key →" />
     }
 }

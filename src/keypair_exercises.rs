@@ -9,7 +9,7 @@ pub fn KeypairExercises() -> impl IntoView {
     let decoy_one = key_math::public_from_private_hex(&"02".repeat(32)).unwrap_or_default();
     let decoy_two = key_math::public_from_private_hex(&"03".repeat(32)).unwrap_or_default();
 
-    let (private_input, set_private_input) = signal(challenge_private);
+    let (private_input, set_private_input) = signal(String::new());
     let (derived_public, set_derived_public) = signal(String::new());
     let (derived_challenge, set_derived_challenge) = signal(false);
     let (share_ok, set_share_ok) = signal(Option::<bool>::None);
@@ -37,10 +37,11 @@ pub fn KeypairExercises() -> impl IntoView {
             <div class="workbench-quiz">
                 <p class="exercise-number">"2 of 2 · Find the matching public key"</p>
                 <h3>"Derive the public key for the private key below."</h3>
-                <p>"Use the derivation tool here, then match its result against the three candidates."</p>
+                <p>"Copy the provided private key into the derivation field, then match its public key against the three candidates."</p>
+                <div class="output"><span>"PROVIDED PRIVATE KEY"</span><code>{challenge_private.clone()}</code></div>
                 <div class="mini-workbench">
                     <label for="challenge-private-key">"Private key"</label>
-                    <input
+                    <div class="paste-input-row" data-pasteable="private key"><input
                         id="challenge-private-key"
                         maxlength="64"
                         prop:value=move || private_input.get()
@@ -50,7 +51,7 @@ pub fn KeypairExercises() -> impl IntoView {
                             set_derived_challenge.set(false);
                             set_match_ok.set(None);
                         }
-                    />
+                    /></div>
                     <button type="button" class="button primary" on:click=move |_| {
                         let value = private_input.get();
                         match key_math::public_from_private_hex(&value) {

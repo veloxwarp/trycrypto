@@ -10,13 +10,13 @@ pub fn HomePage() -> impl IntoView {
             <p class="lede">"The mathematics can be sophisticated. TryCrypto lets you use the tools yourself and learn what they guarantee without needing to implement the algorithms."</p>
             <p class="course-intro"><strong>"Start learning."</strong> " The lessons below cover the basics of how cryptography works, how it's used, and where its guarantees stop."</p>
             <div class="course-list">
-                <A href="/intro" attr:class="course-row course-row-start"><span class="course-number">"INTRO"</span><strong>"Bytes & hexadecimal"</strong><span class="start-badge">"Start here →"</span></A>
+                <A href="/bytes-and-hexadecimal" attr:class="course-row course-row-start"><span class="course-number">"INTRO"</span><strong>"Bytes & hexadecimal"</strong><span class="start-badge">"Start here →"</span></A>
                 <A href="/hashes" attr:class="course-row"><span class="course-number">"01"</span><strong>"Hashes"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/symmetric-encryption" attr:class="course-row"><span class="course-number">"02"</span><strong>"Shared-key encryption"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/keypairs" attr:class="course-row"><span class="course-number">"03"</span><strong>"Public & private keys"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/shared-key-encryption" attr:class="course-row"><span class="course-number">"02"</span><strong>"Shared-key encryption"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/public-key" attr:class="course-row"><span class="course-number">"03"</span><strong>"Public key"</strong><span class="course-arrow">"→"</span></A>
                 <A href="/public-key-encryption" attr:class="course-row"><span class="course-number">"04"</span><strong>"Public-key encryption"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/signatures" attr:class="course-row"><span class="course-number">"05"</span><strong>"Digital signatures"</strong><span class="course-arrow">"→"</span></A>
-                <A href="/verification" attr:class="course-row"><span class="course-number">"06"</span><strong>"Verification & identity"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/digital-signatures" attr:class="course-row"><span class="course-number">"05"</span><strong>"Digital signatures"</strong><span class="course-arrow">"→"</span></A>
+                <A href="/verification-and-identity" attr:class="course-row"><span class="course-number">"06"</span><strong>"Verification & identity"</strong><span class="course-arrow">"→"</span></A>
             </div>
         </section>
         <section class="home-flow-section content-section">
@@ -31,7 +31,7 @@ pub fn HomePage() -> impl IntoView {
         </section>
         <section class="home-start-section content-section">
             <h2>"Ready to try it? Start with the intro lesson."</h2>
-            <A href="/intro" attr:class="button primary">"Start the intro →"</A>
+            <A href="/bytes-and-hexadecimal" attr:class="button primary">"Start the intro →"</A>
         </section>
     }
 }

@@ -56,7 +56,7 @@ pub fn random_hex(byte_len: usize) -> Result<String, JsValue> {
     Ok(hex::encode(bytes))
 }
 
-pub async fn aes_gcm_encrypt(key_hex: &str, plaintext: &str) -> Result<(String, String), JsValue> {
+pub async fn aes_gcm_encrypt(key_hex: &str, plaintext: &str) -> Result<String, JsValue> {
     let key_bytes =
         hex::decode(key_hex).map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
     let key = import_aes_key(&key_bytes).await?;
@@ -69,32 +69,26 @@ pub async fn aes_gcm_encrypt(key_hex: &str, plaintext: &str) -> Result<(String, 
         .encrypt_with_object_and_u8_array(&params, &key, plaintext.as_bytes())?
         .await?;
 
-    Ok((
-        hex::encode(iv),
-        hex::encode(Uint8Array::new(&encrypted).to_vec()),
-    ))
+    let mut packaged = iv;
+    packaged.extend(Uint8Array::new(&encrypted).to_vec());
+    Ok(hex::encode(packaged))
 }
 
-pub async fn aes_gcm_decrypt(
-    key_hex: &str,
-    iv_hex: &str,
-    ciphertext_hex: &str,
-) -> Result<String, JsValue> {
+pub async fn aes_gcm_decrypt(key_hex: &str, ciphertext_hex: &str) -> Result<String, JsValue> {
     let key_bytes =
         hex::decode(key_hex).map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;
-    let iv =
-        hex::decode(iv_hex).map_err(|_| JsValue::from_str("nonce must be valid hexadecimal"))?;
-    let ciphertext = hex::decode(ciphertext_hex)
+    let packaged = hex::decode(ciphertext_hex)
         .map_err(|_| JsValue::from_str("ciphertext must be valid hexadecimal"))?;
 
-    if iv.len() != 12 {
-        return Err(JsValue::from_str("AES-GCM nonce must be exactly 12 bytes"));
+    if packaged.len() <= 12 {
+        return Err(JsValue::from_str("ciphertext package is too short"));
     }
 
+    let (iv, ciphertext) = packaged.split_at(12);
     let key = import_aes_key(&key_bytes).await?;
-    let params = aes_gcm_params(&iv)?;
+    let params = aes_gcm_params(iv)?;
     let decrypted = subtle()?
-        .decrypt_with_object_and_u8_array(&params, &key, &ciphertext)?
+        .decrypt_with_object_and_u8_array(&params, &key, ciphertext)?
         .await?;
 
     String::from_utf8(Uint8Array::new(&decrypted).to_vec())

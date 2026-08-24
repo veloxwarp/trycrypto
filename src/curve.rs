@@ -72,7 +72,6 @@ pub struct KeyPair {
 pub struct SealedMessage {
     pub ephemeral_public: CryptoKey,
     pub ephemeral_public_hex: String,
-    pub nonce_hex: String,
     pub ciphertext_hex: String,
 }
 
@@ -135,27 +134,31 @@ pub async fn seal_for(
         .encrypt_with_object_and_u8_array(&params, &key, plaintext.as_bytes())?
         .await?;
 
+    let mut packaged = nonce;
+    packaged.extend(Uint8Array::new(&encrypted).to_vec());
+
     Ok(SealedMessage {
         ephemeral_public: ephemeral.public,
         ephemeral_public_hex: ephemeral.public_hex,
-        nonce_hex: hex::encode(nonce),
-        ciphertext_hex: hex::encode(Uint8Array::new(&encrypted).to_vec()),
+        ciphertext_hex: hex::encode(packaged),
     })
 }
 
 pub async fn open_from(
     recipient_private: &CryptoKey,
     ephemeral_public: &CryptoKey,
-    nonce_hex: &str,
     ciphertext_hex: &str,
 ) -> Result<String, JsValue> {
     let key = shared_aes_key(recipient_private, ephemeral_public).await?;
-    let nonce = hex::decode(nonce_hex).map_err(|_| JsValue::from_str("invalid nonce hex"))?;
-    let ciphertext =
+    let packaged =
         hex::decode(ciphertext_hex).map_err(|_| JsValue::from_str("invalid ciphertext hex"))?;
-    let params = aes_params(&nonce)?;
+    if packaged.len() <= 12 {
+        return Err(JsValue::from_str("ciphertext package is too short"));
+    }
+    let (iv, ciphertext) = packaged.split_at(12);
+    let params = aes_params(iv)?;
     let decrypted = subtle()?
-        .decrypt_with_object_and_u8_array(&params, &key, &ciphertext)?
+        .decrypt_with_object_and_u8_array(&params, &key, ciphertext)?
         .await?;
     String::from_utf8(Uint8Array::new(&decrypted).to_vec())
         .map_err(|_| JsValue::from_str("decrypted bytes were not text"))

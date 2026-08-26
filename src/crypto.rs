@@ -56,6 +56,14 @@ pub fn random_hex(byte_len: usize) -> Result<String, JsValue> {
     Ok(hex::encode(bytes))
 }
 
+pub async fn sha256_hex(input: &str) -> Result<String, JsValue> {
+    let bytes = Uint8Array::from(input.as_bytes());
+    let digest = subtle()?
+        .digest_with_str_and_buffer_source("SHA-256", bytes.as_ref())?
+        .await?;
+    Ok(hex::encode(Uint8Array::new(&digest).to_vec()))
+}
+
 pub async fn aes_gcm_encrypt(key_hex: &str, plaintext: &str) -> Result<String, JsValue> {
     let key_bytes =
         hex::decode(key_hex).map_err(|_| JsValue::from_str("key must be valid hexadecimal"))?;

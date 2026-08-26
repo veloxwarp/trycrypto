@@ -20,7 +20,7 @@ mod verification_lab;
 
 use leptos::prelude::*;
 use leptos_router::{
-    components::{A, Route, Router, Routes},
+    components::{A, Redirect, Route, Router, Routes},
     path,
 };
 
@@ -47,6 +47,12 @@ fn App() -> impl IntoView {
                     <Route path=path!("digital-signatures") view=SignaturesPage />
                     <Route path=path!("verification-and-identity") view=VerificationPage />
                     <Route path=path!("complete") view=CompletionPage />
+                    <Route path=path!("hex") view=|| view! { <Redirect path="/bytes-and-hexadecimal" /> } />
+                    <Route path=path!("shared-key") view=|| view! { <Redirect path="/shared-key-encryption" /> } />
+                    <Route path=path!("keypairs") view=|| view! { <Redirect path="/public-key" /> } />
+                    <Route path=path!("encryption") view=|| view! { <Redirect path="/public-key-encryption" /> } />
+                    <Route path=path!("signatures") view=|| view! { <Redirect path="/digital-signatures" /> } />
+                    <Route path=path!("verification") view=|| view! { <Redirect path="/verification-and-identity" /> } />
                 </Routes>
             </main>
             <SiteFooter />
@@ -97,7 +103,7 @@ fn SiteHeader() -> impl IntoView {
                 <A href="/" exact=true attr:class="brand" attr:aria-label="TryCrypto home">
                     <span>"Try"<i>"Crypto"</i></span>
                 </A>
-                <span class="site-status">"Under construction"</span>
+                <span class="site-status">"Early preview"</span>
             </div>
             <button
                 type="button"

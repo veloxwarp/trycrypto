@@ -30,18 +30,14 @@
       <div class="workbench-quiz" data-exercise="match">
         <h3>Which message matches this target fingerprint?</h3>
         <code class="target-hash">6c1e614182df466a0629118845873531184affe88aeb240ed834301a82908f47</code>
-        <p>Load each message into the workbench. Its SHA-256 result also appears beside the message, so you can compare the full values here.</p>
+        <p>Each message and its SHA-256 are shown together. Copy a message into the workbench above if you want to calculate it yourself.</p>
         <div class="candidate-grid">
           <div>
-            <span>MESSAGE A</span>
-            <p><code>Meet me at 10:30 by the north entrance.</code></p>
-            <button type="button" data-candidate="a">Calculate message A</button>
+            <div class="output"><span>MESSAGE A</span><code>Meet me at 10:30 by the north entrance.</code></div>
             <div class="output"><span>MESSAGE A · SHA-256</span><code data-candidate-hash="a">Not calculated yet</code></div>
           </div>
           <div>
-            <span>MESSAGE B</span>
-            <p><code>Meet me at 10:30 by the south entrance.</code></p>
-            <button type="button" data-candidate="b">Calculate message B</button>
+            <div class="output"><span>MESSAGE B</span><code>Meet me at 10:30 by the south entrance.</code></div>
             <div class="output"><span>MESSAGE B · SHA-256</span><code data-candidate-hash="b">Not calculated yet</code></div>
           </div>
         </div>
@@ -68,13 +64,8 @@
       a: "Meet me at 10:30 by the north entrance.",
       b: "Meet me at 10:30 by the south entrance.",
     };
-    match.querySelectorAll("[data-candidate]").forEach(button => {
-      button.addEventListener("click", async () => {
-        const candidate = button.dataset.candidate;
-        input.value = messages[candidate];
-        const value = await update(input.value);
-        match.querySelector(`[data-candidate-hash="${candidate}"]`).textContent = value;
-      });
+    Object.entries(messages).forEach(async ([candidate, message]) => {
+      match.querySelector(`[data-candidate-hash="${candidate}"]`).textContent = await digest(message);
     });
     match.querySelectorAll("[data-match]").forEach(button => {
       button.addEventListener("click", () => {

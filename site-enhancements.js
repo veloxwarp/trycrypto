@@ -79,9 +79,17 @@
 
   function installCopyButtons() {
     for (const container of document.querySelectorAll(".output, [data-copyable]")) {
-      if (container.querySelector(":scope > .copy-button")) continue;
       const target = container.querySelector("code");
       if (!target) continue;
+      const hasValue = () => {
+        const value = target.textContent.trim();
+        return value && value !== "—" && value !== "Preparing…" && value !== "Calculating…" && value !== "Not calculated yet";
+      };
+      const existing = container.querySelector(":scope > .copy-button");
+      if (existing) {
+        existing.hidden = !hasValue();
+        continue;
+      }
 
       const label = container.dataset.copyable || container.querySelector("span")?.textContent.trim().toLowerCase() || "value";
       const button = document.createElement("button");
@@ -90,9 +98,10 @@
       button.setAttribute("aria-label", `Copy ${label}`);
       button.title = `Copy ${label}`;
       button.textContent = "Copy";
+      button.hidden = !hasValue();
       button.addEventListener("click", async () => {
         const value = "value" in target ? target.value : target.textContent.trim();
-        if (!value || value === "—" || value === "Preparing…") return;
+        if (!hasValue()) return;
         try {
           await navigator.clipboard.writeText(value);
           button.classList.add("copied");

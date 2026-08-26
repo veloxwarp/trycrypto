@@ -19,10 +19,15 @@ pub fn KeypairsLesson() -> impl IntoView {
             summary="Start with a private key. From it, we can derive a public key that is safe to share. The next two lessons show how to use the pair for encryption and signatures."
         />
         <section class="content-section motivation-section">
-            <h2>"How can I publish something useful without publishing my secret?"</h2>
-            <p class="section-copy">"Public-key cryptography starts with an asymmetric relationship. The private key is secret input. The public key is calculated from it and can be shared freely."</p>
+            <h2>"What can Alice safely publish?"</h2>
+            <p class="section-copy">"Alice wants anyone to be able to send her an encrypted message. With shared-key encryption, she would first need to arrange a different secret key with every sender. Publishing that shared key would not work: once everyone knows it, it is no longer secret."</p>
+            <p class="section-copy">"Public-key cryptography gives Alice two related values instead. She keeps one private and publishes the other. People can use the published value without learning the secret one."</p>
+        </section>
+        <section class="content-section">
+            <h2>"One secret value, one shareable value"</h2>
+            <p class="section-copy">"Alice starts with a randomly generated private key. Her public key is calculated from that private key and can be shared freely."</p>
             <p class="section-copy">"While it is very easy to calculate a public key from a private key, it is far too expensive to go the other way and calculate the private key from only the public key."</p>
-            <p class="section-copy">"Here we'll focus on that useful relationship. In the next two lessons, we'll use public and private keys first for encryption, then for signatures."</p>
+            <p class="section-copy">"This lesson focuses only on creating that pair. In the next two lessons, you'll use public and private keys first for encryption, then for signatures."</p>
         </section>
         <section class="workbench">
             <div class="workbench-heading"><div><h2>"Generate a private key, then derive its public key."</h2></div><p>"Keep the generated private key secret. Copy it into the second step to calculate the public key that is safe to share."</p></div>

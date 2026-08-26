@@ -93,9 +93,12 @@ fn SiteHeader() -> impl IntoView {
     view! {
         <a class="skip-link" href="#main-content">"Skip to lesson content"</a>
         <header class="site-header">
-            <A href="/" exact=true attr:class="brand" attr:aria-label="TryCrypto home">
-                <span>"Try"<i>"Crypto"</i></span>
-            </A>
+            <div class="brand-group">
+                <A href="/" exact=true attr:class="brand" attr:aria-label="TryCrypto home">
+                    <span>"Try"<i>"Crypto"</i></span>
+                </A>
+                <span class="site-status">"Under construction"</span>
+            </div>
             <button
                 type="button"
                 class="nav-toggle"

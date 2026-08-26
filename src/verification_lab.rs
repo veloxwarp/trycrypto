@@ -7,6 +7,9 @@ pub fn VerificationLab() -> impl IntoView {
     let (a, set_a) = signal(Option::<curve::KeyPair>::None);
     let (b, set_b) = signal(Option::<curve::KeyPair>::None);
     let (signature, set_signature) = signal(String::new());
+    let (public_input, set_public_input) = signal(String::new());
+    let (message_input, set_message_input) = signal(String::new());
+    let (signature_input, set_signature_input) = signal(String::new());
     let (feedback, set_feedback) = signal(String::new());
     let (a_tested, set_a_tested) = signal(false);
     let (b_tested, set_b_tested) = signal(false);
@@ -20,7 +23,7 @@ pub fn VerificationLab() -> impl IntoView {
         <section class="workbench">
             <div class="workbench-heading">
                 <h2>"Same message, different public keys."</h2>
-                <p>"Generate two signing keypairs. Key A signs the message. Then hold the message and signature constant while you try each public key."</p>
+                <p>"Generate a signed example. Then copy the same message and signature into the verifier while trying each public key."</p>
             </div>
             <button
                 class="button primary"
@@ -48,7 +51,7 @@ pub fn VerificationLab() -> impl IntoView {
                         }
                     });
                 }
-            >"Generate keys and sign"</button>
+            >"Generate signed example"</button>
             <p class="quiz-feedback" aria-live="polite">{move || feedback.get()}</p>
             <Show when=move || keys_ready.get()>
                 <div class="mini-workbench">
@@ -64,46 +67,30 @@ pub fn VerificationLab() -> impl IntoView {
             <h2>"Exercises"</h2>
             <div class="workbench-quiz">
                 <h3>"Try both public keys."</h3>
-                <p>"Only the public key corresponding to the signing key should validate this signature."</p>
-                <div class="hero-actions">
+                <p>"Copy the message, signature, and one public key into the verifier. Repeat with the other public key without changing the message or signature."</p>
+                <div class="mini-workbench">
+                    <label for="identity-public-key">"Public key"</label><div class="paste-input-row" data-pasteable="public key"><input id="identity-public-key" maxlength="64" prop:value=move||public_input.get() on:input=move|ev|set_public_input.set(event_target_value(&ev)) /></div>
+                    <label for="identity-message">"Message"</label><div class="paste-input-row" data-pasteable="message"><input id="identity-message" prop:value=move||message_input.get() on:input=move|ev|set_message_input.set(event_target_value(&ev)) /></div>
+                    <label for="identity-signature">"Signature"</label><div class="paste-input-row" data-pasteable="signature"><textarea id="identity-signature" prop:value=move||signature_input.get() on:input=move|ev|set_signature_input.set(event_target_value(&ev))></textarea></div>
                     <button
                         type="button"
                         disabled=move || !keys_ready.get()
                         on:click=move |_| {
-                            if let Some(p) = a.get() {
-                                let key = p.public;
-                                let sig = signature.get();
+                            let entered=public_input.get(); let selected_a=a.get().filter(|p|p.public_hex==entered.trim()); let selected_b=b.get().filter(|p|p.public_hex==entered.trim());
+                            if let Some(p) = selected_a.clone().or(selected_b.clone()) {
+                                let key = p.public; let sig = signature_input.get(); let msg=message_input.get(); let is_a=selected_a.is_some();
                                 spawn_local(async move {
-                                    match curve::verify(&key, MESSAGE, &sig).await {
-                                        Ok(true) => {
-                                            set_a_tested.set(true);
-                                            set_feedback.set("Key A: valid. This public key corresponds to the private key that signed the message.".to_owned());
-                                        }
-                                        _ => set_feedback.set("Key A verification failed unexpectedly.".to_owned()),
+                                    match curve::verify(&key, &msg, &sig).await {
+                                        Ok(true) if is_a && msg==MESSAGE => { set_a_tested.set(true); set_feedback.set("Key A: valid. It corresponds to the private key that signed this message.".to_owned()); }
+                                        Ok(false) if !is_a && msg==MESSAGE && sig==signature.get() => { set_b_tested.set(true); set_feedback.set("Key B: not valid for this unchanged message and signature.".to_owned()); }
+                                        Ok(true) => set_feedback.set("Valid, but use the provided message exactly for this exercise.".to_owned()),
+                                        Ok(false) => set_feedback.set("Not valid. Check that the message and signature were copied exactly.".to_owned()),
+                                        Err(_) => set_feedback.set("Verification failed. Check the pasted signature.".to_owned()),
                                     }
                                 });
-                            }
+                            } else { set_feedback.set("Copy either generated public key into the verifier.".to_owned()); }
                         }
-                    >"Verify with A"</button>
-                    <button
-                        type="button"
-                        disabled=move || !keys_ready.get()
-                        on:click=move |_| {
-                            if let Some(p) = b.get() {
-                                let key = p.public;
-                                let sig = signature.get();
-                                spawn_local(async move {
-                                    match curve::verify(&key, MESSAGE, &sig).await {
-                                        Ok(false) => {
-                                            set_b_tested.set(true);
-                                            set_feedback.set("Key B: not valid. The same message and signature do not verify under a different public key.".to_owned());
-                                        }
-                                        _ => set_feedback.set("Key B produced an unexpected verification result.".to_owned()),
-                                    }
-                                });
-                            }
-                        }
-                    >"Verify with B"</button>
+                    >"Verify"</button>
                 </div>
                 <div class="mini-workbench exercise-checklist">
                     <p>{move || if a_tested.get() { "✓ Verify with Key A" } else { "○ Verify with Key A" }}</p>

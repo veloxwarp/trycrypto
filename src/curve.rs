@@ -70,9 +70,24 @@ pub struct KeyPair {
 }
 
 pub struct SealedMessage {
-    pub ephemeral_public: CryptoKey,
-    pub ephemeral_public_hex: String,
     pub ciphertext_hex: String,
+}
+
+async fn import_x25519_public(bytes: &[u8]) -> Result<CryptoKey, JsValue> {
+    let key_data: Object = Uint8Array::from(bytes).unchecked_into();
+    subtle()?
+        .import_key_with_str("raw", &key_data, "X25519", true, usages(&[]).as_ref())?
+        .await?
+        .dyn_into()
+}
+
+pub async fn x25519_public_from_hex(value: &str) -> Result<CryptoKey, JsValue> {
+    let bytes = hex::decode(value.trim())
+        .map_err(|_| JsValue::from_str("public key must be hexadecimal"))?;
+    if bytes.len() != 32 {
+        return Err(JsValue::from_str("public key must be 32 bytes"));
+    }
+    import_x25519_public(&bytes).await
 }
 
 pub async fn generate_x25519() -> Result<KeyPair, JsValue> {
@@ -134,28 +149,29 @@ pub async fn seal_for(
         .encrypt_with_object_and_u8_array(&params, &key, plaintext.as_bytes())?
         .await?;
 
-    let mut packaged = nonce;
+    let mut packaged = hex::decode(&ephemeral.public_hex)
+        .map_err(|_| JsValue::from_str("invalid temporary public key"))?;
+    packaged.extend(nonce);
     packaged.extend(Uint8Array::new(&encrypted).to_vec());
 
     Ok(SealedMessage {
-        ephemeral_public: ephemeral.public,
-        ephemeral_public_hex: ephemeral.public_hex,
         ciphertext_hex: hex::encode(packaged),
     })
 }
 
 pub async fn open_from(
     recipient_private: &CryptoKey,
-    ephemeral_public: &CryptoKey,
     ciphertext_hex: &str,
 ) -> Result<String, JsValue> {
-    let key = shared_aes_key(recipient_private, ephemeral_public).await?;
     let packaged =
         hex::decode(ciphertext_hex).map_err(|_| JsValue::from_str("invalid ciphertext hex"))?;
-    if packaged.len() <= 12 {
+    if packaged.len() <= 44 {
         return Err(JsValue::from_str("ciphertext package is too short"));
     }
-    let (iv, ciphertext) = packaged.split_at(12);
+    let (temporary_public, encrypted) = packaged.split_at(32);
+    let temporary_public = import_x25519_public(temporary_public).await?;
+    let key = shared_aes_key(recipient_private, &temporary_public).await?;
+    let (iv, ciphertext) = encrypted.split_at(12);
     let params = aes_params(iv)?;
     let decrypted = subtle()?
         .decrypt_with_object_and_u8_array(&params, &key, ciphertext)?

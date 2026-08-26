@@ -10,10 +10,16 @@ pub fn PublicKeyEncryptionIntro() -> impl IntoView {
             title="Public-key encryption"
             summary="A public key lets someone encrypt for you without first arranging a shared secret with you."
         />
-        <section class="content-section">
-            <h2>"Now use the public half."</h2>
-            <p class="section-copy">"In the last lesson, we started with a private key and derived a public key that could be shared. Here, the sender creates a temporary X25519 keypair and combines its private key with the recipient's public key. The recipient combines their private key with the sender's temporary public key. Both calculations produce the same shared value, without either private key being published."</p>
-            <p class="section-copy">"TryCrypto turns that shared value into an AES-GCM key and encrypts the message. This protects the message for the chosen recipient, but the temporary sender key does not identify who sent it. Encryption and sender identity are separate questions."</p>
+        <section class="content-section motivation-section">
+            <h2>"How can you send Alice a secret?"</h2>
+            <p class="section-copy">"You want to send Alice a private message, but the two of you have never exchanged a shared key. You could arrange a separate secure meeting just to hand her one, but then you would need a safe way to do that before you could send the original message."</p>
+            <p class="section-copy">"Alice's public key removes that catch. She can publish it anywhere. You use it to encrypt the message, and the resulting ciphertext can only be decrypted with Alice's private key."</p>
         </section>
+        <section class="content-section">
+            <h2>"Encrypt with the public key. Decrypt with the private key."</h2>
+            <p class="section-copy">"The sender needs only Alice's public key and the plaintext. Encryption combines them to produce ciphertext. Alice supplies her matching private key to decryption and recovers the original plaintext."</p>
+            <p class="section-copy">"The sender never receives Alice's private key. Choosing the right public key still matters: ciphertext encrypted with Bob's public key is intended for Bob's private key, not Alice's."</p>
+        </section>
+        <section class="content-section"><h2>"Other common use cases"</h2><ul class="use-case-list"><li><strong>"HTTPS—the secure web."</strong> " The S in HTTPS stands for secure. Public-key cryptography helps your browser confirm the website and establish encryption keys; fast shared-key encryption then protects the data you send and receive."</li><li><strong>"Encrypted email and messaging."</strong> " A sender can protect a message using a recipient's published key."</li><li><strong>"Sharing a secret file with one person."</strong> " You can encrypt a copy using their public key without giving them your own private key."</li></ul></section>
     }
 }

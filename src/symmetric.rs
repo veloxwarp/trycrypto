@@ -63,7 +63,13 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         <LessonIntro number="02" title="Shared-key encryption" eyebrow="Keep the backup private" summary="Encryption turns readable plaintext into unreadable ciphertext. Anyone with the shared key can reverse the process." />
 
         <section class="motivation-section content-section">
-            <h2>"I want to store my backup somewhere else. How do I stop the storage provider from reading it?"</h2>
+            <h2>"Can the storage provider read my backup?"</h2>
+            <p class="section-copy">"You want to keep another copy of your backup with an online storage provider. The provider's account permissions may stop other customers from opening it, but the provider still stores the readable file. An employee, a security breach, or a mistake in those permissions could expose it."</p>
+            <p class="section-copy">"You could simply trust the provider, but you do not need to. Encrypt the backup before uploading it, and the provider only receives scrambled data. Keep the encryption key somewhere else, and you can recover the backup later without giving the provider the ability to read it."</p>
+        </section>
+
+        <section class="content-section">
+            <h2>"Encrypt before you upload"</h2>
             <p class="section-copy">"The original readable data is called plaintext. Encryption applies a secret value called a shared key to that plaintext and produces scrambled data called ciphertext. Later, decryption applies the same shared key to the ciphertext and recovers the plaintext."</p>
             <p class="section-copy">"This is called shared-key or symmetric encryption because the same secret key works in both directions. The key in this lesson is just one very large number: a 256-bit value with 2²⁵⁶ possible choices. That's about 1.16 × 10⁷⁷ possibilities—roughly a 1 followed by 77 zeros. Even trying a billion keys every second for the age of the universe would not come close to searching them all."</p>
             <p class="section-copy">"The encryption and decryption steps must receive exact copies of that same number. TryCrypto displays it as 64 hexadecimal digits, which makes the value easier to copy without changing it."</p>
@@ -91,7 +97,7 @@ pub fn SymmetricEncryptionLesson() -> impl IntoView {
         </section>
 
         <section class="content-section">
-            <h2>"Other common uses"</h2>
+            <h2>"Other common use cases"</h2>
             <ul class="use-case-list">
                 <li><strong>"Private messages."</strong> " People or devices that share a key can exchange messages without exposing their contents to everyone carrying the traffic."</li>
                 <li><strong>"Encrypted drives and ZIP files."</strong> " The contents remain unreadable until you provide the password needed to unlock them."</li>
